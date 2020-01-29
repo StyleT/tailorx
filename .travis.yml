@@ -4,7 +4,7 @@ cache:
   directories:
   - node_modules
 after_script:
-- yarn run codecov
+- npm run codecov
 stages:
   - lint
   - test
@@ -13,34 +13,34 @@ stages:
 jobs:
   fast_finish: true
   allow_failures:
-    - script: yarn run test:frontend
+    - script: npm run test:frontend
   include:
     - stage: lint
       node_js: 12
-      script: yarn run lint
+      script: npm run lint
     - stage: test
       node_js: 8
       script: 
-        - yarn run test
+        - npm run test
     - stage: test
       node_js: 10
       script: 
-        - yarn run test
+        - npm run test
     - stage: test
       node_js: 12
       script: 
-        - yarn run test
-        - yarn run test:frontend:hooks
+        - npm run test
+        - npm run test:frontend:hooks
     - stage: test
       node_js: node
       script: 
-        - yarn run test
+        - npm run test
     - stage: test:frontend
       node_js: node
-      script: yarn run test:frontend
+      script: npm run test:frontend
     - stage: coverage
       node_js: 12
-      script: yarn run coverage
+      script: npm run coverage
 addons:
   sauce_connect:
     username: _vigneshh
