@@ -3,8 +3,8 @@
 ---
 
 [![NPM](https://nodei.co/npm/tailorx.png)](https://npmjs.org/package/tailorx)
-[![Build Status](https://travis-ci.org/zalando/tailor.svg?branch=master)](https://travis-ci.org/zalando/tailor)
-[![Test Coverage](https://codecov.io/github/zalando/tailor/coverage.svg?precision=0)](https://codecov.io/github/zalando/tailor)
+[![Build Status](https://travis-ci.com/StyleT/tailorx.svg?branch=master)](https://travis-ci.org/StyleT/tailorx)
+[![Test Coverage](https://codecov.io/github/StyleT/tailorx/coverage.svg?precision=0)](https://codecov.io/github/StyleT/tailorx)
 [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 
 ## npm status
