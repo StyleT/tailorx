@@ -60,13 +60,12 @@ describe('Tailor', () => {
                             error.presentable = 'template not found';
                             return Promise.reject(error);
                         }
-                        return parseTemplate(
-                            template,
-                            childTemplate
-                        ).then(parsedTemplate => {
-                            cacheTemplate(template);
-                            return parsedTemplate;
-                        });
+                        return parseTemplate(template, childTemplate).then(
+                            parsedTemplate => {
+                                cacheTemplate(template);
+                                return parsedTemplate;
+                            }
+                        );
                     } else {
                         const error = new Error();
                         error.presentable = 'error template';

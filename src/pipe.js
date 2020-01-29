@@ -170,10 +170,10 @@
         return ss;
     }
     /*
-    * Custom Performance entries that can be added from fragments
-    * It's needed because browsers currently do not expose an API to add
-    * custom timing information to performance entries
-    */
+     * Custom Performance entries that can be added from fragments
+     * It's needed because browsers currently do not expose an API to add
+     * custom timing information to performance entries
+     */
     function addPerfEntry(name, duration) {
         // Should not add to entries when Navigation timing is not supported.
         if (!'timing' in perf) {
