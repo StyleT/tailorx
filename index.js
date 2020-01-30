@@ -88,7 +88,5 @@ module.exports = class Tailor extends EventEmitter {
         );
 
         this.requestHandler = requestHandler.bind(this, requestOptions);
-        // To Prevent from exiting the process - https://nodejs.org/api/events.html#events_error_events
-        this.on('error', () => {});
     }
 };
