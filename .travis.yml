@@ -4,46 +4,33 @@ cache:
   directories:
   - node_modules
 after_script:
-- yarn run codecov
+- npm run codecov
 stages:
   - lint
   - test
-  - test:frontend
+#  - test:frontend
   - coverage
 jobs:
   fast_finish: true
   allow_failures:
-    - script: yarn run test:frontend
+    - script: npm run test:frontend
   include:
     - stage: lint
       node_js: 12
-      script: yarn run lint
+      script: npm run lint
     - stage: test
-      node_js: 8
-      script: 
-        - yarn run test
-    - stage: test
-      node_js: 10
-      script: 
-        - yarn run test
+      node_js: 13
+      script:
+        - npm run test
     - stage: test
       node_js: 12
       script: 
-        - yarn run test
-        - yarn run test:frontend:hooks
-    - stage: test
-      node_js: node
-      script: 
-        - yarn run test
-    - stage: test:frontend
-      node_js: node
-      script: yarn run test:frontend
+        - npm run test
+        - npm run test:frontend:hooks
+# TODO: switch this to webdriver.io and turn on in CI
+#    - stage: test:frontend
+#      node_js: node
+#      script: npm run test:frontend
     - stage: coverage
       node_js: 12
-      script: yarn run coverage
-addons:
-  sauce_connect:
-    username: _vigneshh
-env:
-  global:
-    secure: sTKr9tup3z0WP0GKYgxYVExHyVr0ktKFDBqzKzeTJggckWtxXoqnJmckC3EY/7+FYg8JlqAYjSvu2r1JVFVZYMQ7dJ+RojyhjZuUHsB8ULyNtlJnUhjdF7sp4/lY12uzDgielVrVq5tujndiR/2qX6FYD6XiGuGuevR5bqjfrfYbykqCNtdKPiCH7HU95vBq7Qoz+Z2GC7vm9jSN4YSaGk2SjjCcgqNH/xGlXLq6BsRcSSjMKecpQPjq+B1vseEqDMq785AP4r3POJ1g87sscquimtQykloGS7DDJ65YmbxKIrprbTt4aZto3jqp2v6g4gnLVC2mtFv3sEa3M63SaZDQimcamZSJuyKLEXqCVcj35j4lv28pV9RPbyvoEby7kKheKY6wvXQyknastf06mT/SP4nXDsZKIIvwlpNbURd2KQT5X1WZmIqjrfJ0Zm/BnED7pALMATfEsHzk/aoDRFUZhAJCz//5umMDcpSxOEtBkyxz07XzW47Z2NTIOhjf2mzJt2yxxOiU71Gv6DPCC25dBZDi3p/gPm/JYEX4XD5U4hwbnAbk60VntZomGY7+hshkknwSdzg4q+7g3CamG1Dfi+WDOzDm3/PzYOTQfXP26T2KEtRVcbkA5lGi+4E5bRGunxNUdnY3mFE9Oehjb6e+4ko9z5HJXEH381bGB5Q=
+      script: npm run coverage

@@ -1,8 +1,0 @@
-approvals:
-  minimum: 2
-  from:
-    orgs:
-      - zalando
-    collaborators: true
-
-X-Zalando-Team: "pathfinder"

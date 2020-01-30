@@ -1,14 +1,7 @@
-# Tailor logo
+# TailorX logo
 
-<img src="https://rawgithub.com/zalando/tailor/master/logo/tailor-logo.svg" alt="Tailor" width="500" height="200">
-
-Download as [SVG](https://raw.githubusercontent.com/zalando/tailor/master/logo/tailor-logo.svg).
+![TailorX logo](./tailorx-logo.png)
 
 ## Credits
 
-The Tailor logo was designed by [Nadya Kuzmina](http://nadyakuzmina.com/).
-
-## Logo License
-
-The Tailor logo is licensed under CC0, waiving all copyright.
-[Read the license.](../LICENSE-logo.md)
+The [original Tailor logo](./tailor-logo.svg) was designed by [Nadya Kuzmina](http://nadyakuzmina.com/).

@@ -171,7 +171,6 @@ describe('Stringifier Stream', () => {
             nodes.forEach(node => stream.write(node));
             stream.end();
             st.emit('error', new Error('sorry!'));
-            st.end('data');
         });
     });
 });

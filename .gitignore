@@ -4,3 +4,5 @@ npm-debug.log
 coverage
 src/pipe.min.js
 jsconfig.json
+/.idea
+package-lock.json

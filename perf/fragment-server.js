@@ -11,10 +11,8 @@ for (let i = 0; i < SIZE; i++) {
     );
 }
 
-http
-    .createServer((request, response) => {
-        response.writeHead(200, { 'Content-Type': 'text/html' });
-        response.write(buffer);
-        response.end();
-    })
-    .listen(8081);
+http.createServer((request, response) => {
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.write(buffer);
+    response.end();
+}).listen(8081);

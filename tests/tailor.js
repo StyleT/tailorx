@@ -60,13 +60,12 @@ describe('Tailor', () => {
                             error.presentable = 'template not found';
                             return Promise.reject(error);
                         }
-                        return parseTemplate(
-                            template,
-                            childTemplate
-                        ).then(parsedTemplate => {
-                            cacheTemplate(template);
-                            return parsedTemplate;
-                        });
+                        return parseTemplate(template, childTemplate).then(
+                            parsedTemplate => {
+                                cacheTemplate(template);
+                                return parsedTemplate;
+                            }
+                        );
                     } else {
                         const error = new Error();
                         error.presentable = 'error template';
@@ -1036,14 +1035,17 @@ describe('Tailor', () => {
         it('should unzip the fragment response if it is compressed', done => {
             nock('https://fragment')
                 .get('/1')
-                .reply(200, 'hello')
-                .defaultReplyHeaders({
-                    'content-encoding': 'gzip'
-                })
+                .reply(200, () => 'hello')
                 .get('/2')
-                .reply(200, () => {
-                    return zlib.gzipSync('GZIPPED');
-                });
+                .reply(
+                    200,
+                    () => {
+                        return zlib.gzipSync('GZIPPED');
+                    },
+                    {
+                        'content-encoding': 'gzip'
+                    }
+                );
 
             mockTemplate.returns(
                 '<fragment src="https://fragment/1"></fragment>' +
