@@ -1,7 +1,7 @@
 {
     "env": {
         "browser": false,
-        "es6": true,
+        "es2020": true,
         "node": true
     },
     "plugins": [
@@ -19,7 +19,7 @@
         "no-eval": 2,
         "no-unused-vars": 2,
         "no-lonely-if": 2,
-        "quotes": [2, "single"],
+        "quotes": [0, true, "single"],
         "strict": [2, "global"],
         "prettier/prettier": [2, {
             "singleQuote": true,

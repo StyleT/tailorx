@@ -99,7 +99,17 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 
 ### Fragment server
 
-A fragment is an http(s) server that renders only the part of the page and sets `Link` header to provide urls to CSS and JavaScript resources. Check [`examples/basic-css-and-js/index.js`](./examples/basic-css-and-js/index.js) for a draft implementation.
+A fragment is an http(s) server that renders only the part of the page and sets `Link`, `x-head-title`, `x-head-meta` 
+headers (valid only for primary fragment) to provide urls to CSS and JavaScript resources. 
+
+Primary fragment possible response headers:
+* `Link` - Check [reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link). 
+* `x-head-title` - Page title encoded with base64. Will be injected onto `<head>` tag. 
+Ex: `Buffer.from('<title>Page title</title>', 'utf-8').toString('base64')`
+* `x-head-meta` - Page [meta tags](https://www.w3schools.com/tags/tag_meta.asp) encoded with base64.
+Ex: `Buffer.from('<meta name="description" content="Free Web tutorials"><meta name="keywords" content="HTML,CSS,XML,JavaScript">', 'utf-8').toString('base64')`
+
+Check [`examples/basic-css-and-js/index.js`](./examples/basic-css-and-js/index.js) for a draft implementation.
 
 A JavaScript of the fragment is an AMD module, that exports an `init` function, that will be called with DOM element of the fragment as an argument.
 
