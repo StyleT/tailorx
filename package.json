@@ -39,8 +39,8 @@
   },
   "devDependencies": {
     "codecov": "^3.6.2",
-    "eslint": "^4.0.0",
-    "eslint-plugin-prettier": "^2.2.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "iamdee": "^0.4.0",
     "istanbul": "^0.4.1",
     "lazypipe": "^1.0.1",
