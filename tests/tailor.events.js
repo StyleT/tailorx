@@ -113,34 +113,54 @@ describe('Tailor events', () => {
         });
     });
 
-    it('emits `error(request, error)` event on primary error/timeout', done => {
-        const onPrimaryError = sinon.spy();
+    it('emits `error(request, error, response)` event on primary error/timeout', done => {
+        const onPrimaryError = sinon.stub().callsFake((req, err, res) => {
+            res.statusCode = 500;
+            res.end('error response');
+        });
         nock('https://fragment')
             .get('/')
             .reply(500);
-        mockTemplate.returns('<fragment primary src="https://fragment">');
+        mockTemplate.returns(
+            '<fragment id="tst_fragment" primary src="https://fragment">'
+        );
         tailor.on('error', onPrimaryError);
         http.get('http://localhost:8080/template', response => {
             const request = onPrimaryError.args[0][0];
             const error = onPrimaryError.args[0][1];
+
             assert.equal(request.url, '/template');
-            assert.equal(error.message, 'Internal Server Error');
-            response.resume();
-            response.on('end', done);
+            assert.equal(error.message, 'Fragment error for "tst_fragment"');
+
+            let rawData = '';
+            response.on('data', chunk => (rawData += chunk));
+            response.on('end', () => {
+                assert.equal(rawData, 'error response');
+                done();
+            });
         });
     });
 
-    it('emits `error(request, error)` event on template error', done => {
-        const onTemplateError = sinon.spy();
+    it('emits `error(request, error, response)` event on template error', done => {
+        const onTemplateError = sinon.stub().callsFake((req, err, res) => {
+            res.statusCode = 500;
+            res.end('error response');
+        });
         mockTemplate.returns(false);
         tailor.on('error', onTemplateError);
         http.get('http://localhost:8080/template', response => {
             const request = onTemplateError.args[0][0];
             const error = onTemplateError.args[0][1];
+
             assert.equal(request.url, '/template');
             assert.equal(error, 'Error fetching template');
-            response.resume();
-            response.on('end', done);
+
+            let rawData = '';
+            response.on('data', chunk => (rawData += chunk));
+            response.on('end', () => {
+                assert.equal(rawData, 'error response');
+                done();
+            });
         });
     });
 

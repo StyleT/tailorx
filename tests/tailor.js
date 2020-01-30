@@ -129,11 +129,11 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
-        it('"should return 404 if template was not found', done => {
+        it('"should return 500, by default, if template was not found', done => {
             mockTemplate.returns('404');
             getResponse('http://localhost:8080/404-template')
                 .then(response => {
-                    assert.equal(response.statusCode, 404);
+                    assert.equal(response.statusCode, 500);
                     assert.equal(response.body, 'template not found');
                 })
                 .then(done, done);
