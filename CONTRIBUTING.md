@@ -44,6 +44,7 @@ When creating a pull request, its comment should reference the corresponding iss
 ## New version release
 To release new version of package use the following steps:
 ```
+$ npx -p conventional-changelog-angular -p conventional-changelog-preset-loader -p conventional-recommended-bump  conventional-recommended-bump --preset angular
 $ npm version [major | minor | patch]
 # Review last commit
 $ git push && git push --tags

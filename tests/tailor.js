@@ -614,6 +614,36 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
+        it('should insert link to css from fragment link header, if fragment has "id" specified', done => {
+            nock('https://fragment')
+                .get('/1')
+                .reply(200, 'hello', {
+                    Link:
+                        '<http://link>; rel="stylesheet",<http://link2>; rel="fragment-script"'
+                });
+
+            mockTemplate.returns(
+                '<fragment id="tstid" src="https://fragment/1"></fragment>'
+            );
+
+            getResponse('http://localhost:8080/test')
+                .then(response => {
+                    assert.equal(
+                        response.body,
+                        '<html>' +
+                            '<head></head>' +
+                            '<body>' +
+                            '<link rel="stylesheet" href="http://link" data-fragment-id="tstid">' +
+                            '<script data-pipe>p.start(0, "http://link2", {"id":"tstid","range":[0,0]})</script>' +
+                            'hello' +
+                            '<script data-pipe>p.end(0, "http://link2", {"id":"tstid","range":[0,0]})</script>' +
+                            '</body>' +
+                            '</html>'
+                    );
+                })
+                .then(done, done);
+        });
+
         it('should use loadCSS for async fragments', done => {
             nock('https://fragment')
                 .get('/1')
