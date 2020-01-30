@@ -67,6 +67,8 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `pipeInstanceName` - Pipe instance name that is available in the browser window for consuming frontend hooks.
 * `pipeAttributes(attributes)` - Function that returns the minimal set of fragment attributes available on the frontend [hooks](./docs/hooks.md).
 * `tracer` - Opentracing [compliant Tracer implementation](https://doc.esdoc.org/github.com/opentracing/opentracing-javascript/class/src/tracer.js~Tracer.html).
+* `botsGuardEnabled` - `false` by default. This option forces TailorX to respond with 500 error code even if non-primary fragment fails in case the request comes from SEO/SM bot.
+Bot detection is done via [device-detector-js](https://www.npmjs.com/package/device-detector-js).
 
 ## Template
 
