@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 4.0.0
+* removal of the "fallback-src" attribute support for fragments
+
 ### 3.11.0
 * adding "data-fragment-id" attr to the CSS links for fragments with "id" attribute specified
 * support of "invalid" Link headers added
