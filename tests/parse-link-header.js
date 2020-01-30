@@ -23,15 +23,17 @@ describe('Parse Link Header', () => {
         ]);
     });
 
-    it('filters invalid header links', () => {
-        const linkHeader = 'http://a.com/app.js; rel="script"';
+    it('correctly handles invalid header links, for backward compatibility reasons', () => {
+        const linkHeader = 'http://a.com/app.js; rel=script';
 
-        assert.deepStrictEqual(parseLinkHeader(linkHeader), []);
+        assert.deepStrictEqual(parseLinkHeader(linkHeader), [
+            { uri: 'http://a.com/app.js', rel: 'script' }
+        ]);
     });
 
     it('filters invalid rel attributes', () => {
         const linkHeader =
-            '<http://a.com/app.js>; rel="script";, <http://a.com/app1.css>; rel="stylesheet", <http://a.com/app2.css>;, <http://a.com/app3.css>; rel=""';
+            '<http://a.com/app.js>; aaa="bbb" ; rel="script";, <http://a.com/app1.css>; rel="stylesheet", <http://a.com/app2.css>;, <http://a.com/app3.css>, <http://a.com/app4.css>; rel=""';
 
         assert.deepStrictEqual(parseLinkHeader(linkHeader), [
             { uri: 'http://a.com/app.js', rel: 'script' },
@@ -45,5 +47,11 @@ describe('Parse Link Header', () => {
         assert.deepStrictEqual(parseLinkHeader(linkHeader), [
             { uri: 'http://a.com/app.js?nocache=1', rel: 'script' }
         ]);
+    });
+
+    it('correctly handles empty link header', () => {
+        const linkHeader = '';
+
+        assert.deepStrictEqual(parseLinkHeader(linkHeader), []);
     });
 });
