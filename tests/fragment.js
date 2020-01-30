@@ -16,7 +16,6 @@ describe('Fragment', () => {
         const attributes = {
             id: 'foo',
             src: 'https://fragment',
-            'fallback-src': 'https://fragment-fallback',
             async: true,
             timeout: '4000',
             custom: 'bar'
@@ -25,7 +24,6 @@ describe('Fragment', () => {
         const expected = {
             id: attributes.id,
             url: attributes.src,
-            fallbackUrl: attributes['fallback-src'],
             async: attributes.async,
             timeout: 4000,
             primary: false,

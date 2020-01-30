@@ -93,7 +93,6 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 * `timeout` - optional timeout of fragment in milliseconds (default is 3000)
 * `async` - postpones the fragment until the end of body tag
 * `public` - to prevent TailorX from forwarding filtered request headers from upstream to the fragments.
-* `fallback-src` - URL of the fallback fragment in case of timeout/error on the current fragment
 
 > Other attributes are allowed and will be passed as well to relevant functions (eg. `filterRequestHeaders`, `filterResponseHeaders`, etc.)
 

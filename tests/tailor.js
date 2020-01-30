@@ -525,64 +525,6 @@ describe('Tailor', () => {
         });
     });
 
-    describe('Fallback::Tailor ', () => {
-        it('should return 500 in case of primary error if fallback is not specified', done => {
-            nock('https://fragment')
-                .get('/1')
-                .replyWithError('panic!');
-
-            mockTemplate.returns(
-                '<fragment src="https://fragment/1" primary></fragment>'
-            );
-
-            getResponse('http://localhost:8080/test')
-                .then(response => {
-                    assert.equal(response.statusCode, 500);
-                })
-                .then(done, done);
-        });
-
-        it('should fetch the fallback fragment when specified', done => {
-            nock('https://fragment')
-                .get('/1')
-                .reply(500, 'Internal Server Error');
-            nock('https://fragment')
-                .get('/fallback')
-                .reply(200, 'Fallback fragment');
-
-            mockTemplate.returns(
-                '<fragment src="https://fragment/1" fallback-src="https://fragment/fallback">' +
-                    '</fragment>'
-            );
-
-            getResponse('http://localhost:8080/test')
-                .then(response => {
-                    assert.equal(response.statusCode, 200);
-                })
-                .then(done, done);
-        });
-
-        it('should return 500 if both primary and fallback fragment is not reachable', done => {
-            nock('https://fragment')
-                .get('/1')
-                .replyWithError('panic!');
-            nock('https://fragment')
-                .get('/fallback')
-                .reply(500, 'Internal Server Error');
-
-            mockTemplate.returns(
-                '<fragment src="https://fragment/1" primary fallback-src="https://fragment/fallback"> ' +
-                    '</fragment>'
-            );
-
-            getResponse('http://localhost:8080/test')
-                .then(response => {
-                    assert.equal(response.statusCode, 500);
-                })
-                .then(done, done);
-        });
-    });
-
     describe('Link::Tailor: ', () => {
         it('should insert link to css from fragment link header', done => {
             nock('https://fragment')
@@ -1428,7 +1370,6 @@ describe('Tailor', () => {
                         primary: true,
                         'span.kind': 'client',
                         'http.url': 'https://fragment/1',
-                        fallback: false,
                         public: false,
                         async: false,
                         id: 'unnamed',
@@ -1438,17 +1379,13 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
-        it('process request + fragment error & fallback spans', done => {
+        it('process request + fragment error', done => {
             nock('https://fragment')
                 .get('/1')
                 .reply(500);
 
-            nock('http://fragment:9000')
-                .get('/2')
-                .reply(500);
-
             mockTemplate.returns(
-                '<fragment id="test" src="https://fragment/1" timeout="200" fallback-src="http://localhost:9000/2"></fragment>'
+                '<fragment id="test" src="https://fragment/1" timeout="200"></fragment>'
             );
 
             getResponse('http://localhost:8080/test')
@@ -1458,7 +1395,7 @@ describe('Tailor', () => {
                         'span.kind': 'client',
                         [Tags.HTTP_URL]: 'https://fragment/1',
                         id: 'test',
-                        fallback: false,
+                        error: true,
                         primary: false,
                         async: false,
                         public: false,
