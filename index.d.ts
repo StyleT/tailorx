@@ -51,7 +51,6 @@ interface Attributes {
   id: string,
   src: string
   async?: boolean
-  fallbackUrl?: string,
   primary?: boolean
   public?: boolean
   [key: string]: any

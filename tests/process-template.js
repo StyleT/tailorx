@@ -43,9 +43,7 @@ describe('processTemplate', () => {
             .get('/primary')
             .reply(200, '<Primary/>')
             .get('/bad')
-            .reply(500, 'Internal Error')
-            .get('/fallback')
-            .reply(200, '<FallbackFragment 2/>');
+            .reply(500, 'Internal Error');
 
         handleNestedTag = (request, tag, options, context) => {
             if (tag && tag.name === 'nested-fragments') {

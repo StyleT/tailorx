@@ -6,12 +6,6 @@ const Fragment = require('../lib/fragment');
 const requestFragment = require('../lib/request-fragment');
 
 const TAG = { attributes: { src: 'https://fragment' } };
-const TAG_FALLBACK = {
-    attributes: {
-        src: 'https://fragment',
-        'fallback-src': 'https://fallback-fragment'
-    }
-};
 const REQUEST = { headers: {} };
 const RESPONSE_HEADERS = { connection: 'close' };
 const filterHeaderFn = () => ({});
@@ -32,42 +26,6 @@ describe('Fragment events', () => {
         const fragment = new Fragment(getOptions(TAG));
         fragment.on('start', done);
         fragment.fetch(REQUEST);
-    });
-
-    it('triggers `fallback` event', done => {
-        nock('https://fragment')
-            .get('/')
-            .reply(500, 'Server Error');
-        nock('https://fallback-fragment')
-            .get('/')
-            .reply(200, 'OK');
-        const fragment = new Fragment(getOptions(TAG_FALLBACK));
-        fragment.on('fallback', () => {
-            done();
-        });
-        fragment.fetch(REQUEST);
-    });
-
-    it('should not trigger error and response event when fallback is triggered', done => {
-        const onFallback = sinon.spy();
-        const onError = sinon.spy();
-
-        nock('https://fragment')
-            .get('/')
-            .reply(500, 'Server Error');
-        nock('https://fallback-fragment')
-            .get('/')
-            .reply(200);
-        const fragment = new Fragment(getOptions(TAG_FALLBACK));
-        fragment.on('fallback', onFallback);
-        fragment.on('error', onError);
-        fragment.stream.on('end', () => {
-            assert.equal(onFallback.callCount, 1);
-            assert.equal(onError.callCount, 0);
-            done();
-        });
-        fragment.fetch(REQUEST);
-        fragment.stream.resume();
     });
 
     it('triggers `response(statusCode, headers)` when received headers', done => {
@@ -106,27 +64,6 @@ describe('Fragment events', () => {
             done();
         });
         fragment.fetch(REQUEST);
-    });
-
-    it('should not trigger `response` and `end` for fallback fragment', done => {
-        const onResponse = sinon.spy();
-        const onEnd = sinon.spy();
-        const onFallback = sinon.spy();
-        nock('https://fragment')
-            .get('/')
-            .reply(500);
-        const fragment = new Fragment(getOptions(TAG_FALLBACK));
-        fragment.on('response', onResponse);
-        fragment.on('end', onEnd);
-        fragment.on('fallback', onFallback);
-        fragment.fetch(REQUEST);
-        fragment.stream.on('end', () => {
-            assert.equal(onResponse.callCount, 0);
-            assert.equal(onEnd.callCount, 0);
-            assert.equal(onFallback.callCount, 1);
-            done();
-        });
-        fragment.stream.resume();
     });
 
     it('should not trigger `response` and `end` if there was an `error`', done => {
