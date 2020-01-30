@@ -1,5 +1,12 @@
 # Tailor Changelog
 
+### 3.11.0
+* adding "data-fragment-id" attr to the CSS links for fragments with "id" attribute specified
+* support of "invalid" Link headers added
+
+### 3.10.0
+* Re-branding to TailorX
+
 ### 3.9.2
 * add timeout field to fragment opentracing span([#270](https://github.com/zalando/tailor/pull/270))
 
