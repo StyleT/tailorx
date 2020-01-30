@@ -27,10 +27,6 @@ jobs:
       script: 
         - npm run test
         - npm run test:frontend:hooks
-    - stage: test
-      node_js: node
-      script: 
-        - npm run test
 # TODO: switch this to webdriver.io and turn on in CI
 #    - stage: test:frontend
 #      node_js: node
