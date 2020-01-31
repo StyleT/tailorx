@@ -114,7 +114,7 @@ describe('Tailor', () => {
         mockContext.reset();
         mockTemplate.reset();
         mockChildTemplate.reset();
-        cacheTemplate.reset();
+        cacheTemplate.resetHistory();
         server.close(done);
     });
 
