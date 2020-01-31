@@ -1,7 +1,8 @@
 node_modules
 .DS_Store
 npm-debug.log
-coverage
+/coverage
+/.nyc_output
 src/pipe.min.js
 jsconfig.json
 /.idea

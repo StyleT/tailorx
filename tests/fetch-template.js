@@ -28,7 +28,7 @@ describe('fetch-template', () => {
         }
     });
 
-    afterEach(() => mockParseTemplate.reset());
+    afterEach(() => mockParseTemplate.resetHistory());
 
     describe('templatePath - File', () => {
         it('should fetch template from file path', () => {

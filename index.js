@@ -75,7 +75,8 @@ module.exports = class Tailor extends EventEmitter {
                 requestFragment: requestFragment(filterRequestHeaders),
                 pipeInstanceName: 'Pipe',
                 pipeDefinition: pipeChunk,
-                pipeAttributes: getPipeAttributes
+                pipeAttributes: getPipeAttributes,
+                botsGuardEnabled: false
             },
             options
         );
