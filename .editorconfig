@@ -15,3 +15,6 @@ indent_size = 4
 # Override specific settings for npm generated json files to avoid big diffs
 [package.json]
 indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
