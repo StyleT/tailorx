@@ -13,6 +13,5 @@ indent_style = space
 indent_size = 4
 
 # Override specific settings for npm generated json files to avoid big diffs
-[{package.json}]
-indent_style = space
+[package.json]
 indent_size = 2

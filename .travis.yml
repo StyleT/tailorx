@@ -9,7 +9,6 @@ stages:
   - lint
   - test
 #  - test:frontend
-  - coverage
 jobs:
   fast_finish: true
   allow_failures:
@@ -25,12 +24,9 @@ jobs:
     - stage: test
       node_js: 12
       script: 
-        - npm run test
+        - npm run coverage
         - npm run test:frontend:hooks
 # TODO: switch this to webdriver.io and turn on in CI
 #    - stage: test:frontend
 #      node_js: node
 #      script: npm run test:frontend
-    - stage: coverage
-      node_js: 12
-      script: npm run coverage
