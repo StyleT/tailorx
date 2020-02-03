@@ -60,7 +60,7 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `handledTags` - An array of custom tags, check [`tests/handle-tag`](./tests/handle-tag.js) for more info
 * `handleTag(request, tag, options, context)` - Receives a tag or closing tag and serializes it to a string or returns a stream
 * `filterRequestHeaders(attributes, request)` - Function that filters the request headers that are passed to fragment request, check default implementation in [`lib/filter-headers`](./lib/filter-headers.js)
-* `filterResponseHeaders(attributes, headers)` - Function that maps the given response headers from the primary fragment request to the final response
+* `filterResponseHeaders(attributes, headers)` - Function that maps the given response headers from the primary & `return-headers` fragments to the final response
 * `maxAssetLinks` - Number of `Link` Header directives for CSS and JS respected per fragment - defaults to `1`
 * `requestFragment(filterHeaders)(url, attributes, request)` - Function that returns a promise of request to a fragment server, check the default implementation in [`lib/request-fragment`](./lib/request-fragment.js)
 * `amdLoaderUrl` - URL to AMD loader. We use [RequireJS from cdnjs](https://cdnjs.com/libraries/require.js) as default
@@ -95,6 +95,8 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 * `timeout` - optional timeout of fragment in milliseconds (default is 3000)
 * `async` - postpones the fragment until the end of body tag
 * `public` - to prevent TailorX from forwarding filtered request headers from upstream to the fragments.
+* `return-headers` - makes TailorX to wait for the fragment response headers & send them in response. 
+Note that they will be merged with headers from `primary` fragment & may be overwritten by it.
 
 > Other attributes are allowed and will be passed as well to relevant functions (eg. `filterRequestHeaders`, `filterResponseHeaders`, etc.)
 

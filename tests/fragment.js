@@ -25,6 +25,7 @@ describe('Fragment', () => {
             id: attributes.id,
             url: attributes.src,
             async: attributes.async,
+            returnHeaders: false,
             timeout: 4000,
             primary: false,
             public: false

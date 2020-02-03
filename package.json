@@ -35,6 +35,7 @@
   "dependencies": {
     "@namecheap/error-extender": "^1.1.1",
     "device-detector-js": "^2.2.1",
+    "lodash": "^4.17.15",
     "opentracing": "^0.14.3",
     "parse5": "^3.0.3",
     "util.promisify": "^1.0.0"
