@@ -37,7 +37,8 @@ module.exports = class Tailor extends EventEmitter {
                 handledTags: [],
                 handleTag: () => '',
                 requestFragment: requestFragment(filterRequestHeaders),
-                botsGuardEnabled: false
+                botsGuardEnabled: false,
+                fragmentHooks: {}
             },
             options
         );

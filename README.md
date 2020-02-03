@@ -66,6 +66,9 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `tracer` - Opentracing [compliant Tracer implementation](https://doc.esdoc.org/github.com/opentracing/opentracing-javascript/class/src/tracer.js~Tracer.html).
 * `botsGuardEnabled` - `false` by default. This option forces TailorX to respond with 500 error code even if non-primary fragment fails in case the request comes from SEO/SM bot.
 Bot detection is done via [device-detector-js](https://www.npmjs.com/package/device-detector-js).
+* `fragmentHooks` - Allows to override default behaviour of the `insertStart` & `insertEnd` hooks & wrap response from the fragment with custom code.
+    * `insertStart(stream, attributes, headers, index)`
+    * `insertEnd(stream, attributes, headers, index)`
 
 ## Template
 

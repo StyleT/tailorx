@@ -40,11 +40,13 @@ describe('Tailor', () => {
 
     const createTailorInstance = ({
         maxAssetLinks = 1,
-        amdLoaderUrl = 'https://loader'
+        amdLoaderUrl = 'https://loader',
+        fragmentHooks = {}
     }) => {
         const options = {
             amdLoaderUrl,
             maxAssetLinks,
+            fragmentHooks,
             fetchContext: mockContext,
             fetchTemplate: (request, parseTemplate) => {
                 const template = mockTemplate(request);
@@ -392,8 +394,7 @@ describe('Tailor', () => {
             let withFile;
             before(done => {
                 const tailor3 = createTailorInstance({
-                    amdLoaderUrl: 'file://blah',
-                    pipeDefinition: () => Buffer.from('')
+                    amdLoaderUrl: 'file://blah'
                 });
                 withFile = http.createServer(tailor3.requestHandler);
                 withFile.listen(8082, 'localhost', done);
@@ -1380,6 +1381,106 @@ describe('Tailor', () => {
                     });
                 })
                 .then(done, done);
+        });
+    });
+
+    describe('Custom "fragmentHooks" handling', () => {
+        let serverCustomOptions;
+
+        beforeEach(() => {
+            nock('https://fragment')
+                .get('/1')
+                .reply(200, 'hello multiple', {
+                    Link:
+                        '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                });
+
+            mockTemplate.returns(
+                '<fragment id="tstID" src="https://fragment/1"></fragment>'
+            );
+        });
+
+        afterEach(done => {
+            mockTemplate.reset();
+            serverCustomOptions.close(done);
+        });
+
+        it('insertStart', done => {
+            const tailor = createTailorInstance({
+                fragmentHooks: {
+                    insertStart: (stream, attributes, headers, index) => {
+                        stream.write('#insertStart hook#');
+
+                        try {
+                            assert.equal(attributes.id, 'tstID');
+                            assert.deepEqual(headers, {
+                                link:
+                                    '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                            });
+                            assert.equal(index, 0);
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+            });
+
+            serverCustomOptions = http.createServer(tailor.requestHandler);
+            serverCustomOptions.listen(8085, 'localhost', () => {
+                getResponse('http://localhost:8085/test')
+                    .then(response => {
+                        assert.equal(
+                            response.body,
+                            '<html><head></head><body>' +
+                                '<!-- Fragment #0 "tstID" START -->' +
+                                '#insertStart hook#' +
+                                'hello multiple' +
+                                '<script type="text/javascript" src="http://link2" data-fragment-id="tstID"></script>' +
+                                '<!-- Fragment #0 "tstID" END -->' +
+                                '</body></html>'
+                        );
+                    })
+                    .then(done, done);
+            });
+        });
+
+        it('insertEnd', done => {
+            const tailor = createTailorInstance({
+                fragmentHooks: {
+                    insertEnd: (stream, attributes, headers, index) => {
+                        stream.write('#insertEnd hook#');
+
+                        try {
+                            assert.equal(attributes.id, 'tstID');
+                            assert.deepEqual(headers, {
+                                link:
+                                    '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                            });
+                            assert.equal(index, 0);
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+            });
+
+            serverCustomOptions = http.createServer(tailor.requestHandler);
+            serverCustomOptions.listen(8085, 'localhost', () => {
+                getResponse('http://localhost:8085/test')
+                    .then(response => {
+                        assert.equal(
+                            response.body,
+                            '<html><head></head><body>' +
+                                '<!-- Fragment #0 "tstID" START -->' +
+                                '<link rel="stylesheet" href="http://link1" data-fragment-id="tstID">' +
+                                'hello multiple' +
+                                '#insertEnd hook#' +
+                                '<!-- Fragment #0 "tstID" END -->' +
+                                '</body></html>'
+                        );
+                    })
+                    .then(done, done);
+            });
         });
     });
 });
