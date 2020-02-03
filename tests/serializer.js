@@ -9,7 +9,6 @@ describe('Serializer', () => {
     const defaultOpts = {
         treeAdapter: adapter,
         slotMap: new Map(),
-        pipeTags: ['script', 'fragment'],
         handleTags: ['x-tag', 'fragment', 'text/template']
     };
     const getSerializer = (template, fullRendering = true) => {
@@ -24,25 +23,6 @@ describe('Serializer', () => {
         const template = '<blah></blah>';
         const serializedList = getSerializer(template).serialize();
         assert(serializedList instanceof Array);
-    });
-
-    it('should insert pipe placeholder before first tag from pipeBefore tags', () => {
-        const template = `
-            <!DOCTYPE html>
-            <!--comment-->
-            <html>
-                <head>
-                    <script></script>
-                </head>
-                <body></body>
-            </html>
-        `;
-        const serializedList = getSerializer(template).serialize();
-        assert.equal(
-            serializedList[0].toString().trim(),
-            '<!DOCTYPE html><!--comment--><html><head>'
-        );
-        assert.deepEqual(serializedList[1], { placeholder: 'pipe' });
     });
 
     it('should output placeholder and closing tags for handle tags', () => {
@@ -91,10 +71,7 @@ describe('Serializer', () => {
             '<script type="fragment" primary async src="https://example.com"></script>';
         const serializedList = getSerializer(template).serialize();
         assert.equal(serializedList[0].toString().trim(), '<html><head>');
-        assert.equal(serializedList[1].toString().trim(), {
-            placeholder: 'pipe'
-        });
-        assert.deepEqual(serializedList[2], {
+        assert.deepEqual(serializedList[1], {
             name: 'fragment',
             attributes: {
                 type: 'fragment',
@@ -105,7 +82,7 @@ describe('Serializer', () => {
             textContent: ''
         });
         assert.equal(
-            serializedList[4].toString().trim(),
+            serializedList[3].toString().trim(),
             '</head><body></body></html>'
         );
     });
@@ -115,16 +92,13 @@ describe('Serializer', () => {
             '<script type="text/template">console.log("yo")</script>';
         const serializedList = getSerializer(template).serialize();
         assert.equal(serializedList[0].toString().trim(), '<html><head>');
-        assert.equal(serializedList[1].toString().trim(), {
-            placeholder: 'pipe'
-        });
-        assert.deepEqual(serializedList[2], {
+        assert.deepEqual(serializedList[1], {
             name: 'text/template',
             attributes: { type: 'text/template' },
             textContent: 'console.log("yo")'
         });
         assert.equal(
-            serializedList[4].toString().trim(),
+            serializedList[3].toString().trim(),
             '</head><body></body></html>'
         );
     });
