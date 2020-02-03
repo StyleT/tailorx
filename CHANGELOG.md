@@ -1,5 +1,11 @@
 # Tailor Changelog
 
+## 4.1.0
+* added injection of the "title" & "meta" tags onto page header [#11](https://github.com/StyleT/tailorx/pull/11)
+* better error handing capabilities [#12](https://github.com/StyleT/tailorx/pull/12)
+* SeoBotsGuardStream added [#13](https://github.com/StyleT/tailorx/pull/13)
+* "return-headers" fragment attribute added [#14](https://github.com/StyleT/tailorx/pull/14)
+
 ## 4.0.0
 * removal of the "fallback-src" attribute support for fragments
 
