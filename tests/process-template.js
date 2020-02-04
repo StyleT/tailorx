@@ -81,9 +81,6 @@ describe('processTemplate', () => {
                 ['fragment', 'nested-fragments'],
                 ['script']
             ),
-            pipeDefinition: name => Buffer.from(`<pipe id="${name}" />`),
-            pipeAttributes: attributes => ({ id: attributes.id }),
-            pipeInstanceName: 'TailorPipe',
             asyncStream: new AsyncStream(),
             handleTag: handleNestedTag,
             requestFragment: requestFragment
@@ -163,7 +160,7 @@ describe('processTemplate', () => {
             options.asyncStream.on('end', () => {
                 assert.equal(
                     data,
-                    '<script data-pipe>TailorPipe.start(2)</script><NormalFragment 3/><script data-pipe>TailorPipe.end(2)</script>'
+                    '<!-- Fragment #2 "f3" START --><NormalFragment 3/><!-- Fragment #2 "f3" END -->'
                 );
                 done();
             });
@@ -187,7 +184,7 @@ describe('processTemplate', () => {
 
             function assertIndex(index, fragmentText) {
                 const r = new RegExp(
-                    `TailorPipe[.]start[(]${index}[,)].+${fragmentText}.+TailorPipe[.]end[(]${index}[,)]`,
+                    `<!-- Fragment #${index} ".*" START -->.+${fragmentText}.+<!-- Fragment #${index} ".*" END -->`,
                     'g'
                 );
                 const doesMatch = r.test(data);

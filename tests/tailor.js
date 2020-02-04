@@ -4,12 +4,9 @@ const http = require('http');
 const nock = require('nock');
 const sinon = require('sinon');
 const zlib = require('zlib');
-const { readFileSync } = require('fs');
-const { resolve } = require('path');
 const { TEMPLATE_NOT_FOUND } = require('../lib/fetch-template');
 const Tailor = require('../index');
 const processTemplate = require('../lib/process-template');
-const PIPE_DEFINITION = readFileSync(resolve(__dirname, '../src/pipe.min.js'));
 const { Tags, MockTracer } = require('opentracing');
 
 //Custom mock tracer for Unit tests
@@ -18,6 +15,8 @@ class CustomTracer extends MockTracer {
     extract() {}
 }
 
+const stripComments = v => v.replace(/<!--.+?-->/g, '');
+
 describe('Tailor', () => {
     let server;
     const tracer = new CustomTracer();
@@ -25,7 +24,6 @@ describe('Tailor', () => {
     const mockChildTemplate = sinon.stub();
     const mockContext = sinon.stub();
     const cacheTemplate = sinon.spy();
-    const pipeInstanceName = 'p';
 
     function getResponse(url) {
         return new Promise(resolve => {
@@ -42,69 +40,63 @@ describe('Tailor', () => {
 
     const createTailorInstance = ({
         maxAssetLinks = 1,
-        amdLoaderUrl = 'https://loader',
-        pipeDefinition
+        getAssetsToPreload = () => ({ scriptRefs: ['https://loader'] }),
+        fragmentHooks = {}
     }) => {
-        const options = Object.assign(
-            {
-                amdLoaderUrl,
-                maxAssetLinks,
-                fetchContext: mockContext,
-                fetchTemplate: (request, parseTemplate) => {
-                    const template = mockTemplate(request);
-                    const childTemplate = mockChildTemplate(request);
-                    if (template) {
-                        if (template === '404') {
-                            const error = new Error();
-                            error.code = TEMPLATE_NOT_FOUND;
-                            error.presentable = 'template not found';
-                            return Promise.reject(error);
-                        }
-                        return parseTemplate(template, childTemplate).then(
-                            parsedTemplate => {
-                                cacheTemplate(template);
-                                return parsedTemplate;
-                            }
-                        );
-                    } else {
+        const options = {
+            getAssetsToPreload,
+            maxAssetLinks,
+            fragmentHooks,
+            fetchContext: mockContext,
+            fetchTemplate: (request, parseTemplate) => {
+                const template = mockTemplate(request);
+                const childTemplate = mockChildTemplate(request);
+                if (template) {
+                    if (template === '404') {
                         const error = new Error();
-                        error.presentable = 'error template';
+                        error.code = TEMPLATE_NOT_FOUND;
+                        error.presentable = 'template not found';
                         return Promise.reject(error);
                     }
-                },
-                handledTags: ['delayed-fragment'],
-                handleTag: (request, tag, options, context) => {
-                    if (tag.name === 'delayed-fragment') {
-                        const st = processTemplate(request, options, context);
-                        setTimeout(() => {
-                            st.end({
-                                name: 'fragment',
-                                attributes: {
-                                    async: true,
-                                    src: 'https://fragment/1'
-                                }
-                            });
-                        }, 10);
-                        return st;
-                    }
-
-                    return '';
-                },
-                pipeInstanceName,
-                pipeAttributes: attributes => ({ id: attributes.id }),
-                filterResponseHeaders: (attributes, headers) => headers,
-                tracer
+                    return parseTemplate(template, childTemplate).then(
+                        parsedTemplate => {
+                            cacheTemplate(template);
+                            return parsedTemplate;
+                        }
+                    );
+                } else {
+                    const error = new Error();
+                    error.presentable = 'error template';
+                    return Promise.reject(error);
+                }
             },
-            pipeDefinition !== undefined ? { pipeDefinition } : {}
-        );
+            handledTags: ['delayed-fragment'],
+            handleTag: (request, tag, options, context) => {
+                if (tag.name === 'delayed-fragment') {
+                    const st = processTemplate(request, options, context);
+                    setTimeout(() => {
+                        st.end({
+                            name: 'fragment',
+                            attributes: {
+                                async: true,
+                                src: 'https://fragment/1'
+                            }
+                        });
+                    }, 10);
+                    return st;
+                }
+
+                return '';
+            },
+            filterResponseHeaders: (attributes, headers) => headers,
+            tracer
+        };
 
         return new Tailor(options);
     };
 
     beforeEach(done => {
-        const tailor = createTailorInstance({
-            pipeDefinition: () => Buffer.from('')
-        });
+        const tailor = createTailorInstance({});
         mockContext.returns(Promise.resolve({}));
         server = http.createServer(tailor.requestHandler);
         server.listen(8080, 'localhost', done);
@@ -158,12 +150,12 @@ describe('Tailor', () => {
                 .then(response => {
                     assert.equal(response.statusCode, 200);
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
-                            '<script data-pipe>p.start(0)</script>hello<script data-pipe>p.end(0)</script>' +
-                            '<script data-pipe>p.start(1)</script>world<script data-pipe>p.end(1)</script>' +
+                            'hello' +
+                            'world' +
                             '</body>' +
                             '</html>'
                     );
@@ -171,6 +163,7 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
+        // TODO: add async fragments support
         it('should support async fragments', done => {
             nock('https://fragment')
                 .get('/1')
@@ -187,10 +180,10 @@ describe('Tailor', () => {
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
-                            '<script data-pipe>p.placeholder(0)</script>' +
-                            '<script data-pipe>p.start(0)</script>' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Fragment #0 START -->' +
                             'hello' +
-                            '<script data-pipe>p.end(0)</script>' +
+                            '<!-- Fragment #0 END -->' +
                             '</body>' +
                             '</html>'
                     );
@@ -210,49 +203,13 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head>' +
-                            '<script data-pipe>p.start(0)</script>' +
                             'yes' +
-                            '<script data-pipe>p.end(0)</script>' +
                             '</head>' +
                             '<body></body>' +
                             '</html>'
-                    );
-                })
-                .then(done, done);
-        });
-    });
-
-    describe('Piping:: Tailor', () => {
-        let withPipe;
-        before(done => {
-            const tailor4 = createTailorInstance({});
-            withPipe = http.createServer(tailor4.requestHandler);
-            withPipe.listen(8083, 'localhost', done);
-            // To simulate the preloading & piping mechanism
-            mockTemplate.returns('<script type="fragment"></script>');
-        });
-
-        after(done => {
-            mockTemplate.reset();
-            withPipe.close(done);
-        });
-
-        it('should stream pipe definition with loader in the head', done => {
-            getResponse('http://localhost:8083/test')
-                .then(response => {
-                    assert.equal(
-                        response.headers.link,
-                        '<https://loader>; rel="preload"; as="script"; nopush; crossorigin'
-                    );
-                    assert.equal(
-                        response.body,
-                        '<html><head>' +
-                            '<script src="https://loader" crossorigin></script>\n' +
-                            `<script>var ${pipeInstanceName}=${PIPE_DEFINITION}</script>\n` +
-                            '</head><body></body></html>'
                     );
                 })
                 .then(done, done);
@@ -434,19 +391,8 @@ describe('Tailor', () => {
         });
 
         describe('Preloading', () => {
-            let withFile;
-            before(done => {
-                const tailor3 = createTailorInstance({
-                    amdLoaderUrl: 'file://blah',
-                    pipeDefinition: () => Buffer.from('')
-                });
-                withFile = http.createServer(tailor3.requestHandler);
-                withFile.listen(8082, 'localhost', done);
-            });
-
-            after(done => {
+            after(() => {
                 mockTemplate.reset();
-                withFile.close(done);
             });
             it('should preload external module loader if fragment is present', done => {
                 nock('https://fragment')
@@ -466,25 +412,6 @@ describe('Tailor', () => {
                             response.headers.link,
                             '<https://loader>; rel="preload"; as="script"; nopush; crossorigin'
                         );
-                    })
-                    .then(done, done);
-            });
-
-            it('should not preload inlined module loader', done => {
-                nock('https://fragment')
-                    .get('/1')
-                    .reply(200, 'non-primary', {
-                        Link:
-                            '<http://non-primary>; rel="stylesheet",<http://non-primary>; rel="fragment-script"'
-                    });
-
-                mockTemplate.returns(
-                    '<fragment src="https://fragment/1"></fragment>'
-                );
-
-                getResponse('http://localhost:8082/test')
-                    .then(response => {
-                        assert.equal(response.headers.link, undefined);
                     })
                     .then(done, done);
             });
@@ -539,6 +466,77 @@ describe('Tailor', () => {
                         );
                     })
                     .then(done, done);
+            });
+
+            describe('"getAssetsToPreload" TailorX option should correctly work', () => {
+                let withFile;
+                beforeEach(done => {
+                    const tailor3 = createTailorInstance({
+                        getAssetsToPreload: () => ({
+                            scriptRefs: ['https://loader/a.js', '/b.js'],
+                            styleRefs: ['https://loader/a.css', '/b.css']
+                        })
+                    });
+                    withFile = http.createServer(tailor3.requestHandler);
+                    withFile.listen(8082, 'localhost', done);
+                });
+
+                afterEach(done => {
+                    mockTemplate.reset();
+                    withFile.close(done);
+                });
+
+                it('without primary fragment', done => {
+                    nock('https://fragment')
+                        .get('/1')
+                        .reply(200, 'non-primary', {
+                            Link:
+                                '<http://non-primary>; rel="stylesheet",<http://non-primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment src="https://fragment/1"></fragment>'
+                    );
+
+                    getResponse('http://localhost:8082/test')
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
+                                    '</b.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</b.js>; rel="preload"; as="script"; nopush;'
+                            );
+                        })
+                        .then(done, done);
+                });
+
+                it('with primary fragment', done => {
+                    nock('https://fragment')
+                        .get('/1')
+                        .reply(200, 'non-primary', {
+                            Link:
+                                '<http://primary>; rel="stylesheet",<http://primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment primary src="https://fragment/1"></fragment>'
+                    );
+
+                    getResponse('http://localhost:8082/test')
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
+                                    '</b.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</b.js>; rel="preload"; as="script"; nopush;,' +
+                                    '<http://primary>; rel="preload"; as="style"; nopush;,' +
+                                    '<http://primary>; rel="preload"; as="script"; nopush; crossorigin'
+                            );
+                        })
+                        .then(done, done);
+                });
             });
         });
     });
@@ -602,14 +600,13 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
                             '<link rel="stylesheet" href="http://link">' +
-                            '<script data-pipe>p.start(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
                             'hello' +
-                            '<script data-pipe>p.end(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link2"></script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -632,14 +629,13 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
                             '<link rel="stylesheet" href="http://link" data-fragment-id="tstid">' +
-                            '<script data-pipe>p.start(0, "http://link2", {"id":"tstid","range":[0,0]})</script>' +
                             'hello' +
-                            '<script data-pipe>p.end(0, "http://link2", {"id":"tstid","range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link2" data-fragment-id="tstid"></script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -647,6 +643,7 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
+        // TODO: add async fragments support
         it('should use loadCSS for async fragments', done => {
             nock('https://fragment')
                 .get('/1')
@@ -664,11 +661,12 @@ describe('Tailor', () => {
                     assert.equal(
                         response.body,
                         '<html><head></head><body>' +
-                            '<script data-pipe>p.placeholder(0)</script>' +
-                            '<script>p.loadCSS("http://link")</script>' +
-                            '<script data-pipe>p.start(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Fragment #0 START -->' +
+                            '<!-- Async fragments are not fully implemented yet: http://link -->' +
                             'hello' +
-                            '<script data-pipe>p.end(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link2"></script>' +
+                            '<!-- Fragment #0 END -->' +
                             '</body></html>'
                     );
                 })
@@ -690,14 +688,13 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
                             '<link rel="stylesheet" href="http://link">' +
-                            '<script data-pipe>p.start(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
                             'hello' +
-                            '<script data-pipe>p.end(0, "http://link2", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link2"></script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -707,31 +704,6 @@ describe('Tailor', () => {
     });
 
     describe('Attributes and Context::Tailor', () => {
-        it('should call the pipe start and end with custom pipe attributes', done => {
-            nock('https://fragment')
-                .get('/1')
-                .reply(200, 'hello', {
-                    Link: '<http://link2>; rel="fragment-script"'
-                });
-
-            mockTemplate.returns(
-                '<fragment id="foo" src="https://fragment/1"></fragment>'
-            );
-
-            getResponse('http://localhost:8080/test')
-                .then(response => {
-                    assert.equal(
-                        response.body,
-                        '<html><head></head><body>' +
-                            '<script data-pipe>p.start(0, "http://link2", {"id":"foo","range":[0,0]})</script>' +
-                            'hello' +
-                            '<script data-pipe>p.end(0, "http://link2", {"id":"foo","range":[0,0]})</script>' +
-                            '</body></html>'
-                    );
-                })
-                .then(done, done);
-        });
-
         it('should get attributes from context and not mutate the template with the context', done => {
             nock('https://fragment')
                 .get('/yes')
@@ -740,59 +712,55 @@ describe('Tailor', () => {
                 .reply(200, 'no');
 
             mockTemplate.returns(
-                '<fragment async=false primary id="f-1" src="https://fragment/no"></frgament>'
+                '<fragment primary id="f-1" src="https://fragment/no"></frgament>'
             );
 
             const contextObj = {
                 'f-1': {
                     src: 'https://fragment/yes',
-                    primary: false,
-                    async: true
+                    primary: false
                 }
             };
             mockContext.returns(Promise.resolve(contextObj));
 
-            getResponse('http://localhost:8080/test').then(response => {
-                assert.equal(response.statusCode, 200);
-                assert.equal(
-                    response.body,
-                    '<html>' +
-                        '<head></head>' +
-                        '<body>' +
-                        '<script data-pipe>p.placeholder(0)</script>' +
-                        '<script data-pipe>p.start(0)</script>' +
-                        'yes' +
-                        '<script data-pipe>p.end(0)</script>' +
-                        '</body>' +
-                        '</html>'
-                );
+            getResponse('http://localhost:8080/test')
+                .then(response => {
+                    assert.equal(response.statusCode, 200);
+                    assert.equal(
+                        stripComments(response.body),
+                        '<html>' +
+                            '<head></head>' +
+                            '<body>' +
+                            'yes' +
+                            '</body>' +
+                            '</html>'
+                    );
 
-                // Second request
-                mockContext.returns(Promise.resolve({}));
-                mockTemplate.returns(cacheTemplate.args[0][0]);
+                    // Second request
+                    mockContext.returns(Promise.resolve({}));
+                    mockTemplate.returns(cacheTemplate.args[0][0]);
 
-                getResponse('http://localhost:8080/test')
-                    .then(response => {
-                        assert.equal(response.statusCode, 200);
-                        assert.equal(
-                            response.body,
-                            '<html>' +
-                                '<head></head>' +
-                                '<body>' +
-                                '<script data-pipe>p.placeholder(0)</script>' +
-                                '<script data-pipe>p.start(0)</script>' +
-                                'no' +
-                                '<script data-pipe>p.end(0)</script>' +
-                                '</body>' +
-                                '</html>'
-                        );
-                    })
-                    .then(done, done);
-            });
+                    getResponse('http://localhost:8080/test')
+                        .then(response => {
+                            assert.equal(response.statusCode, 200);
+                            assert.equal(
+                                stripComments(response.body),
+                                '<html>' +
+                                    '<head></head>' +
+                                    '<body>' +
+                                    'no' +
+                                    '</body>' +
+                                    '</html>'
+                            );
+                        })
+                        .then(done, done);
+                })
+                .catch(done);
         });
     });
 
     describe('Custom async fragments', () => {
+        //TODO: add async fragments support
         it('should add async fragments from handleTag', done => {
             nock('https://fragment')
                 .get('/1')
@@ -805,7 +773,12 @@ describe('Tailor', () => {
                 .then(response => {
                     assert.equal(
                         response.body,
-                        '<html><head></head><body><script data-pipe>p.placeholder(0)</script><script data-pipe>p.start(0)</script>hello<script data-pipe>p.end(0)</script></body></html>'
+                        '<html><head></head><body>' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Fragment #0 START -->' +
+                            'hello' +
+                            '<!-- Fragment #0 END -->' +
+                            '</body></html>'
                     );
                 })
                 .then(done, done);
@@ -1025,16 +998,12 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
-                            '<script data-pipe>p.start(0)</script>' +
                             'hello' +
-                            '<script data-pipe>p.end(0)</script>' +
-                            '<script data-pipe>p.start(1)</script>' +
                             'world' +
-                            '<script data-pipe>p.end(1)</script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -1088,16 +1057,12 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
-                            '<script data-pipe>p.start(0)</script>' +
                             'hello' +
-                            '<script data-pipe>p.end(0)</script>' +
-                            '<script data-pipe>p.start(1)</script>' +
                             'GZIPPED' +
-                            '<script data-pipe>p.end(1)</script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -1126,8 +1091,8 @@ describe('Tailor', () => {
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
-                            '<script data-pipe>p.start(0)</script>' +
-                            '<script data-pipe>p.end(0)</script>' +
+                            '<!-- Fragment #0 START -->' +
+                            '<!-- Fragment #0 END -->' +
                             '</body>' +
                             '</html>'
                     );
@@ -1152,11 +1117,10 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html><head></head><body>' +
-                            '<script data-pipe>p.start(0, "http://link1", {"id":0,"range":[0,0]})</script>' +
                             'hello maxAssetLinks default' +
-                            '<script data-pipe>p.end(0, "http://link1", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link1"></script>' +
                             '</body></html>'
                     );
                 })
@@ -1177,14 +1141,12 @@ describe('Tailor', () => {
             getResponse('http://localhost:8080/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
                             '<link rel="stylesheet" href="http://css1">' +
-                            '<script data-pipe>p.start(0)</script>' +
                             'hello multiple styles with default config' +
-                            '<script data-pipe>p.end(0)</script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -1225,21 +1187,19 @@ describe('Tailor', () => {
             getResponse('http://localhost:8081/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html><head></head><body>' +
-                            '<script data-pipe>p.start(0, "http://link1", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.start(1, "http://link2", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.start(2, "http://link3", {"id":0,"range":[0,2]})</script>' +
                             'hello multiple' +
-                            '<script data-pipe>p.end(2, "http://link3", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.end(1, "http://link2", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.end(0, "http://link1", {"id":0,"range":[0,2]})</script>' +
+                            '<script type="text/javascript" src="http://link3"></script>' +
+                            '<script type="text/javascript" src="http://link2"></script>' +
+                            '<script type="text/javascript" src="http://link1"></script>' +
                             '</body></html>'
                     );
                 })
                 .then(done, done);
         });
 
+        //TODO: add async fragments support
         it('should assign correct IDs to sync and async fragments', done => {
             nock('https://fragment')
                 .get('/1')
@@ -1275,32 +1235,30 @@ describe('Tailor', () => {
                     assert.equal(
                         response.body,
                         '<html><head></head><body>' +
-                            '<script data-pipe>p.start(0, "http://link-a1", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.start(1, "http://link-a2", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.start(2, "http://link-a3", {"id":0,"range":[0,2]})</script>' +
+                            '<!-- Fragment #0 START -->' +
                             'hello many' +
-                            '<script data-pipe>p.end(2, "http://link-a3", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.end(1, "http://link-a2", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.end(0, "http://link-a1", {"id":0,"range":[0,2]})</script>' +
-                            '<script data-pipe>p.placeholder(3)</script>' +
-                            '<script data-pipe>p.placeholder(6)</script>' +
-                            '<script data-pipe>p.start(9, "http://link-d1", {"id":9,"range":[9,11]})</script>' +
-                            '<script data-pipe>p.start(10, "http://link-d2", {"id":9,"range":[9,11]})</script>' +
-                            '<script data-pipe>p.start(11, "http://link-d3", {"id":9,"range":[9,11]})</script>' +
+                            '<script type="text/javascript" src="http://link-a3"></script>' +
+                            '<script type="text/javascript" src="http://link-a2"></script>' +
+                            '<script type="text/javascript" src="http://link-a1"></script>' +
+                            '<!-- Fragment #0 END -->' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Fragment #9 START -->' +
                             'hello exactly three' +
-                            '<script data-pipe>p.end(11, "http://link-d3", {"id":9,"range":[9,11]})</script>' +
-                            '<script data-pipe>p.end(10, "http://link-d2", {"id":9,"range":[9,11]})</script>' +
-                            '<script data-pipe>p.end(9, "http://link-d1", {"id":9,"range":[9,11]})</script>' +
-                            '<script data-pipe>p.start(3, "http://link-b1", {"id":"f-2","range":[3,3]})</script>' +
+                            '<script type="text/javascript" src="http://link-d3"></script>' +
+                            '<script type="text/javascript" src="http://link-d2"></script>' +
+                            '<script type="text/javascript" src="http://link-d1"></script>' +
+                            '<!-- Fragment #9 END -->' +
+                            '<!-- Fragment #3 "f-2" START -->' +
                             'hello single' +
-                            '<script data-pipe>p.end(3, "http://link-b1", {"id":"f-2","range":[3,3]})</script>' +
-                            '<script data-pipe>p.start(6, "http://link-c1", {"id":6,"range":[6,8]})</script>' +
-                            '<script data-pipe>p.start(7, "http://link-c2", {"id":6,"range":[6,8]})</script>' +
-                            '<script data-pipe>p.start(8, "http://link-c3", {"id":6,"range":[6,8]})</script>' +
+                            '<script type="text/javascript" src="http://link-b1" data-fragment-id="f-2"></script>' +
+                            '<!-- Fragment #3 "f-2" END -->' +
+                            '<!-- Fragment #6 START -->' +
                             'hello exactly three async' +
-                            '<script data-pipe>p.end(8, "http://link-c3", {"id":6,"range":[6,8]})</script>' +
-                            '<script data-pipe>p.end(7, "http://link-c2", {"id":6,"range":[6,8]})</script>' +
-                            '<script data-pipe>p.end(6, "http://link-c1", {"id":6,"range":[6,8]})</script>' +
+                            '<script type="text/javascript" src="http://link-c3"></script>' +
+                            '<script type="text/javascript" src="http://link-c2"></script>' +
+                            '<script type="text/javascript" src="http://link-c1"></script>' +
+                            '<!-- Fragment #6 END -->' +
                             '</body></html>'
                     );
                 })
@@ -1321,16 +1279,15 @@ describe('Tailor', () => {
             getResponse('http://localhost:8081/test')
                 .then(response => {
                     assert.equal(
-                        response.body,
+                        stripComments(response.body),
                         '<html>' +
                             '<head></head>' +
                             '<body>' +
                             '<link rel="stylesheet" href="http://css1">' +
                             '<link rel="stylesheet" href="http://css2">' +
                             '<link rel="stylesheet" href="http://css3">' +
-                            '<script data-pipe>p.start(0, "http://script-link", {"id":0,"range":[0,0]})</script>' +
                             'hello multiple styles ' +
-                            '<script data-pipe>p.end(0, "http://script-link", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://script-link"></script>' +
                             '</body>' +
                             '</html>'
                     );
@@ -1338,6 +1295,7 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
+        //TODO: add async fragments support
         it('should use loadCSS for async fragments for all 3 styles', done => {
             nock('https://fragment')
                 .get('/1')
@@ -1355,13 +1313,14 @@ describe('Tailor', () => {
                     assert.equal(
                         response.body,
                         '<html><head></head><body>' +
-                            '<script data-pipe>p.placeholder(0)</script>' +
-                            '<script>p.loadCSS("http://link1")</script>' +
-                            '<script>p.loadCSS("http://link2")</script>' +
-                            '<script>p.loadCSS("http://link3")</script>' +
-                            '<script data-pipe>p.start(0, "http://link4", {"id":0,"range":[0,0]})</script>' +
+                            '<!-- Async fragments are not fully implemented yet -->' +
+                            '<!-- Fragment #0 START -->' +
+                            '<!-- Async fragments are not fully implemented yet: http://link1 -->' +
+                            '<!-- Async fragments are not fully implemented yet: http://link2 -->' +
+                            '<!-- Async fragments are not fully implemented yet: http://link3 -->' +
                             'hello multiple styles async' +
-                            '<script data-pipe>p.end(0, "http://link4", {"id":0,"range":[0,0]})</script>' +
+                            '<script type="text/javascript" src="http://link4"></script>' +
+                            '<!-- Fragment #0 END -->' +
                             '</body></html>'
                     );
                 })
@@ -1464,6 +1423,106 @@ describe('Tailor', () => {
                     });
                 })
                 .then(done, done);
+        });
+    });
+
+    describe('Custom "fragmentHooks" handling', () => {
+        let serverCustomOptions;
+
+        beforeEach(() => {
+            nock('https://fragment')
+                .get('/1')
+                .reply(200, 'hello multiple', {
+                    Link:
+                        '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                });
+
+            mockTemplate.returns(
+                '<fragment id="tstID" src="https://fragment/1"></fragment>'
+            );
+        });
+
+        afterEach(done => {
+            mockTemplate.reset();
+            serverCustomOptions.close(done);
+        });
+
+        it('insertStart', done => {
+            const tailor = createTailorInstance({
+                fragmentHooks: {
+                    insertStart: (stream, attributes, headers, index) => {
+                        stream.write('#insertStart hook#');
+
+                        try {
+                            assert.equal(attributes.id, 'tstID');
+                            assert.deepEqual(headers, {
+                                link:
+                                    '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                            });
+                            assert.equal(index, 0);
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+            });
+
+            serverCustomOptions = http.createServer(tailor.requestHandler);
+            serverCustomOptions.listen(8085, 'localhost', () => {
+                getResponse('http://localhost:8085/test')
+                    .then(response => {
+                        assert.equal(
+                            response.body,
+                            '<html><head></head><body>' +
+                                '<!-- Fragment #0 "tstID" START -->' +
+                                '#insertStart hook#' +
+                                'hello multiple' +
+                                '<script type="text/javascript" src="http://link2" data-fragment-id="tstID"></script>' +
+                                '<!-- Fragment #0 "tstID" END -->' +
+                                '</body></html>'
+                        );
+                    })
+                    .then(done, done);
+            });
+        });
+
+        it('insertEnd', done => {
+            const tailor = createTailorInstance({
+                fragmentHooks: {
+                    insertEnd: (stream, attributes, headers, index) => {
+                        stream.write('#insertEnd hook#');
+
+                        try {
+                            assert.equal(attributes.id, 'tstID');
+                            assert.deepEqual(headers, {
+                                link:
+                                    '<http://link1>; rel="stylesheet", <http://link2>; rel="fragment-script"'
+                            });
+                            assert.equal(index, 0);
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+            });
+
+            serverCustomOptions = http.createServer(tailor.requestHandler);
+            serverCustomOptions.listen(8085, 'localhost', () => {
+                getResponse('http://localhost:8085/test')
+                    .then(response => {
+                        assert.equal(
+                            response.body,
+                            '<html><head></head><body>' +
+                                '<!-- Fragment #0 "tstID" START -->' +
+                                '<link rel="stylesheet" href="http://link1" data-fragment-id="tstID">' +
+                                'hello multiple' +
+                                '#insertEnd hook#' +
+                                '<!-- Fragment #0 "tstID" END -->' +
+                                '</body></html>'
+                        );
+                    })
+                    .then(done, done);
+            });
         });
     });
 });

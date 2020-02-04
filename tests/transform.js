@@ -83,7 +83,6 @@ describe('Transform', () => {
         const options = mockSerializer.args[0][1];
         assert(options.slotMap instanceof Map);
         assert(options.treeAdapter instanceof Object);
-        assert.equal(options.pipeTags, pipeTags);
         assert.equal(options.handleTags, handleTags);
     });
 });
