@@ -473,14 +473,8 @@ describe('Tailor', () => {
                 beforeEach(done => {
                     const tailor3 = createTailorInstance({
                         getAssetsToPreload: () => ({
-                            scriptRefs: [
-                                'https://loader/b.js',
-                                'https://loader/a.js'
-                            ],
-                            styleRefs: [
-                                'https://loader/a.css',
-                                'https://loader/b.css'
-                            ]
+                            scriptRefs: ['https://loader/a.js', '/b.js'],
+                            styleRefs: ['https://loader/a.css', '/b.css']
                         })
                     });
                     withFile = http.createServer(tailor3.requestHandler);
@@ -509,9 +503,9 @@ describe('Tailor', () => {
                             assert.equal(
                                 response.headers.link,
                                 '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
-                                    '<https://loader/b.css>; rel="preload"; as="style"; nopush;,' +
-                                    '<https://loader/b.js>; rel="preload"; as="script"; nopush; crossorigin,' +
-                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin'
+                                    '</b.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</b.js>; rel="preload"; as="script"; nopush;'
                             );
                         })
                         .then(done, done);
@@ -534,9 +528,9 @@ describe('Tailor', () => {
                             assert.equal(
                                 response.headers.link,
                                 '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
-                                    '<https://loader/b.css>; rel="preload"; as="style"; nopush;,' +
-                                    '<https://loader/b.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</b.css>; rel="preload"; as="style"; nopush;,' +
                                     '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</b.js>; rel="preload"; as="script"; nopush;,' +
                                     '<http://primary>; rel="preload"; as="style"; nopush;,' +
                                     '<http://primary>; rel="preload"; as="script"; nopush; crossorigin'
                             );
