@@ -69,6 +69,8 @@ Bot detection is done via [device-detector-js](https://www.npmjs.com/package/dev
 * `fragmentHooks` - Allows to override default behaviour of the `insertStart` & `insertEnd` hooks & wrap response from the fragment with custom code.
     * `insertStart(stream, attributes, headers, index)`
     * `insertEnd(stream, attributes, headers, index)`
+* `getAssetsToPreload()` - If specified, should return array of assets that should be added to the response `Link` header for preload.
+Return value format: `{styleRefs: ['https://ex.com/style.css'], scriptRefs: ['https://ex.com/script.css']}`
 
 ## Template
 

@@ -24,7 +24,3 @@ jobs:
       node_js: 12
       script: 
         - npm run coverage
-# TODO: switch this to webdriver.io and turn on in CI
-#    - stage: test:frontend
-#      node_js: node
-#      script: npm run test:frontend

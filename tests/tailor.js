@@ -40,11 +40,11 @@ describe('Tailor', () => {
 
     const createTailorInstance = ({
         maxAssetLinks = 1,
-        amdLoaderUrl = 'https://loader',
+        getAssetsToPreload = () => ({ scriptRefs: ['https://loader'] }),
         fragmentHooks = {}
     }) => {
         const options = {
-            amdLoaderUrl,
+            getAssetsToPreload,
             maxAssetLinks,
             fragmentHooks,
             fetchContext: mockContext,
@@ -391,18 +391,8 @@ describe('Tailor', () => {
         });
 
         describe('Preloading', () => {
-            let withFile;
-            before(done => {
-                const tailor3 = createTailorInstance({
-                    amdLoaderUrl: 'file://blah'
-                });
-                withFile = http.createServer(tailor3.requestHandler);
-                withFile.listen(8082, 'localhost', done);
-            });
-
-            after(done => {
+            after(() => {
                 mockTemplate.reset();
-                withFile.close(done);
             });
             it('should preload external module loader if fragment is present', done => {
                 nock('https://fragment')
@@ -422,25 +412,6 @@ describe('Tailor', () => {
                             response.headers.link,
                             '<https://loader>; rel="preload"; as="script"; nopush; crossorigin'
                         );
-                    })
-                    .then(done, done);
-            });
-
-            it('should not preload inlined module loader', done => {
-                nock('https://fragment')
-                    .get('/1')
-                    .reply(200, 'non-primary', {
-                        Link:
-                            '<http://non-primary>; rel="stylesheet",<http://non-primary>; rel="fragment-script"'
-                    });
-
-                mockTemplate.returns(
-                    '<fragment src="https://fragment/1"></fragment>'
-                );
-
-                getResponse('http://localhost:8082/test')
-                    .then(response => {
-                        assert.equal(response.headers.link, undefined);
                     })
                     .then(done, done);
             });
@@ -495,6 +466,83 @@ describe('Tailor', () => {
                         );
                     })
                     .then(done, done);
+            });
+
+            describe('"getAssetsToPreload" TailorX option should correctly work', () => {
+                let withFile;
+                beforeEach(done => {
+                    const tailor3 = createTailorInstance({
+                        getAssetsToPreload: () => ({
+                            scriptRefs: [
+                                'https://loader/b.js',
+                                'https://loader/a.js'
+                            ],
+                            styleRefs: [
+                                'https://loader/a.css',
+                                'https://loader/b.css'
+                            ]
+                        })
+                    });
+                    withFile = http.createServer(tailor3.requestHandler);
+                    withFile.listen(8082, 'localhost', done);
+                });
+
+                afterEach(done => {
+                    mockTemplate.reset();
+                    withFile.close(done);
+                });
+
+                it('without primary fragment', done => {
+                    nock('https://fragment')
+                        .get('/1')
+                        .reply(200, 'non-primary', {
+                            Link:
+                                '<http://non-primary>; rel="stylesheet",<http://non-primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment src="https://fragment/1"></fragment>'
+                    );
+
+                    getResponse('http://localhost:8082/test')
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/b.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/b.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin'
+                            );
+                        })
+                        .then(done, done);
+                });
+
+                it('with primary fragment', done => {
+                    nock('https://fragment')
+                        .get('/1')
+                        .reply(200, 'non-primary', {
+                            Link:
+                                '<http://primary>; rel="stylesheet",<http://primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment primary src="https://fragment/1"></fragment>'
+                    );
+
+                    getResponse('http://localhost:8082/test')
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader/a.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/b.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/b.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '<https://loader/a.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '<http://primary>; rel="preload"; as="style"; nopush;,' +
+                                    '<http://primary>; rel="preload"; as="script"; nopush; crossorigin'
+                            );
+                        })
+                        .then(done, done);
+                });
             });
         });
     });
