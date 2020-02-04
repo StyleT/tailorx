@@ -1,5 +1,12 @@
 # Tailor Changelog
 
+## 5.0.0
+* See PR [#15](https://github.com/StyleT/tailorx/pull/15)
+    * (**breaking change**) removal of the frontend logic & Pipe.js
+    * "fragmentHooks" option added to TailorX
+    * More advanced `Link` header parsing logic
+    * (**breaking change**) `amdLoaderUrl()` option was replaced with `getAssetsToPreload()`
+
 ## 4.1.0
 * added injection of the "title" & "meta" tags onto page header [#11](https://github.com/StyleT/tailorx/pull/11)
 * better error handing capabilities [#12](https://github.com/StyleT/tailorx/pull/12)
