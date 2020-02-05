@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 5.1.0
+* "forward-querystring" fragment attribute added [#16](https://github.com/StyleT/tailorx/pull/16)
+
 ## 5.0.0
 * See PR [#15](https://github.com/StyleT/tailorx/pull/15)
     * (**breaking change**) removal of the frontend logic & Pipe.js
