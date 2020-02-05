@@ -214,6 +214,30 @@ describe('Tailor', () => {
                 })
                 .then(done, done);
         });
+
+        it('should support fragments with "forward-querystring" attribute', done => {
+            nock('https://fragment')
+                .get('/1?a=3&b=2')
+                .reply(200, 'hello');
+
+            mockTemplate.returns(
+                '<fragment src="https://fragment/1?a=3" forward-querystring></fragment>'
+            );
+
+            getResponse('http://localhost:8080/test?a=1&b=2')
+                .then(response => {
+                    assert.equal(
+                        stripComments(response.body),
+                        '<html>' +
+                            '<head></head>' +
+                            '<body>' +
+                            'hello' +
+                            '</body>' +
+                            '</html>'
+                    );
+                })
+                .then(done, done);
+        });
     });
 
     describe('Headers::Tailor', () => {

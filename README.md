@@ -99,6 +99,7 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 * `public` - to prevent TailorX from forwarding filtered request headers from upstream to the fragments.
 * `return-headers` - makes TailorX to wait for the fragment response headers & send them in response. 
 Note that they will be merged with headers from `primary` fragment & may be overwritten by it.
+* `forward-querystring` - forwards query parameters from the original request down to the fragment 
 
 > Other attributes are allowed and will be passed as well to relevant functions (eg. `filterRequestHeaders`, `filterResponseHeaders`, etc.)
 
