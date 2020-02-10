@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 5.2.0
+* keep-alive support
+
 ## 5.1.0
 * "forward-querystring" fragment attribute added [#16](https://github.com/StyleT/tailorx/pull/16)
 
