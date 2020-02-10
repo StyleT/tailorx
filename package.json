@@ -30,6 +30,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@namecheap/error-extender": "^1.1.1",
+    "agentkeepalive": "^4.1.0",
     "device-detector-js": "^2.2.1",
     "lodash": "^4.17.15",
     "opentracing": "^0.14.3",
