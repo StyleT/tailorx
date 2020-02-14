@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 5.3.0
+* Memoization of the CPU expensive template parsing added [#17](https://github.com/StyleT/tailorx/pull/17)
+
 ## 5.2.0
 * keep-alive support
 
