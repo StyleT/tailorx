@@ -9,7 +9,7 @@
     "node-tailor"
   ],
   "scripts": {
-    "test": "mocha --harmony tests/**",
+    "test": "mocha --harmony tests/**/*.js",
     "coverage": "nyc --reporter=lcov --reporter=text mocha --harmony tests/**",
     "codecov": "cat coverage/lcov.info | codecov",
     "lint": "eslint .",
@@ -33,6 +33,7 @@
     "agentkeepalive": "^4.1.0",
     "device-detector-js": "^2.2.1",
     "lodash": "^4.17.15",
+    "memoizee": "^0.4.14",
     "opentracing": "^0.14.3",
     "parse5": "^3.0.3",
     "util.promisify": "^1.0.0"
