@@ -12,11 +12,11 @@
 [![downloads](https://img.shields.io/npm/dt/tailorx.svg)](https://npmjs.org/package/tailorx)
 [![version](https://img.shields.io/npm/v/tailorx.svg)](https://npmjs.org/package/tailorx)
 
-TailorX is a layout service that uses streams to compose a web page from fragment services. 
-O'Reilly describes it in the title of 
-[this blog post](https://www.oreilly.com/ideas/better-streaming-layouts-for-frontend-microservices-with-tailor) 
-as "a library that provides a middleware which you can integrate into any Node.js server." 
-It's partially inspired by Facebook’s [BigPipe](https://www.facebook.com/notes/facebook-engineering/bigpipe-pipelining-web-pages-for-high-performance/389414033919/) 
+TailorX is a layout service that uses streams to compose a web page from fragment services.
+O'Reilly describes it in the title of
+[this blog post](https://www.oreilly.com/ideas/better-streaming-layouts-for-frontend-microservices-with-tailor)
+as "a library that provides a middleware which you can integrate into any Node.js server."
+It's partially inspired by Facebook’s [BigPipe](https://www.facebook.com/notes/facebook-engineering/bigpipe-pipelining-web-pages-for-high-performance/389414033919/)
 and based on [Zalando Tailor](https://github.com/zalando/tailor).
 
 Some of TailorX's features and benefits:
@@ -58,6 +58,7 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `templatesPath` - To specify the path where the templates are stored locally, Defaults to `/templates/`
 * `fragmentTag` - Name of the fragment tag, defaults to `fragment`
 * `handledTags` - An array of custom tags, check [`tests/handle-tag`](./tests/handle-tag.js) for more info
+* `maxTemplates` - By default, it equals `20`. You can limit templates cache size which you want to keep, it relates to how many templates you have in your app.
 * `handleTag(request, tag, options, context)` - Receives a tag or closing tag and serializes it to a string or returns a stream
 * `filterRequestHeaders(attributes, request)` - Function that filters the request headers that are passed to fragment request, check default implementation in [`lib/filter-headers`](./lib/filter-headers.js)
 * `filterResponseHeaders(attributes, headers)` - Function that maps the given response headers from the primary & `return-headers` fragments to the final response
@@ -97,20 +98,20 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 * `timeout` - optional timeout of fragment in milliseconds (default is 3000)
 * `async` - postpones the fragment until the end of body tag
 * `public` - to prevent TailorX from forwarding filtered request headers from upstream to the fragments.
-* `return-headers` - makes TailorX to wait for the fragment response headers & send them in response. 
+* `return-headers` - makes TailorX to wait for the fragment response headers & send them in response.
 Note that they will be merged with headers from `primary` fragment & may be overwritten by it.
-* `forward-querystring` - forwards query parameters from the original request down to the fragment 
+* `forward-querystring` - forwards query parameters from the original request down to the fragment
 
 > Other attributes are allowed and will be passed as well to relevant functions (eg. `filterRequestHeaders`, `filterResponseHeaders`, etc.)
 
 ### Fragment server
 
-A fragment is an http(s) server that renders only the part of the page and sets `Link`, `x-head-title`, `x-head-meta` 
-headers (valid only for primary fragment) to provide urls to CSS and JavaScript resources. 
+A fragment is an http(s) server that renders only the part of the page and sets `Link`, `x-head-title`, `x-head-meta`
+headers (valid only for primary fragment) to provide urls to CSS and JavaScript resources.
 
 Primary fragment possible response headers:
-* `Link` - Check [reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link). 
-* `x-head-title` - Page title encoded with base64. Will be injected onto `<head>` tag. 
+* `Link` - Check [reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link).
+* `x-head-title` - Page title encoded with base64. Will be injected onto `<head>` tag.
 Ex: `Buffer.from('<title>Page title</title>', 'utf-8').toString('base64')`
 * `x-head-meta` - Page [meta tags](https://www.w3schools.com/tags/tag_meta.asp) encoded with base64.
 Ex: `Buffer.from('<meta name="description" content="Free Web tutorials"><meta name="keywords" content="HTML,CSS,XML,JavaScript">', 'utf-8').toString('base64')`
