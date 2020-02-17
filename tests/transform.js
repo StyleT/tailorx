@@ -16,20 +16,27 @@ describe('Transform', () => {
         serialize() {}
     }
 
-    let mockSerializer = sinon.spy(function() {
-        return sinon.createStubInstance(MockSerializer);
+    const serialize = sinon.stub();
+    const mockSerializer = sinon.spy(function() {
+        return sinon.createStubInstance(MockSerializer, {
+            serialize
+        });
     });
     const handleTags = ['x-tag'];
-    const pipeTags = ['script'];
+    const maxTemplates = 1;
 
     beforeEach(() => {
+        serialize.withArgs().returns([]);
         Transform = proxyquire('../lib/transform', {
             './serializer': mockSerializer
         });
-        transformInstance = new Transform(handleTags, pipeTags);
+        transformInstance = new Transform(handleTags, maxTemplates);
     });
 
-    afterEach(() => mockSerializer.resetHistory());
+    afterEach(() => {
+        serialize.reset();
+        mockSerializer.resetHistory();
+    });
 
     it('should make child Templates optional', () => {
         const childTemplate = '';
@@ -84,5 +91,178 @@ describe('Transform', () => {
         assert(options.slotMap instanceof Map);
         assert(options.treeAdapter instanceof Object);
         assert.equal(options.handleTags, handleTags);
+    });
+
+    it('should return correct serialized chunks', () => {
+        const baseTemplate =
+            '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="utf-8" />' +
+            '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+            '</head>' +
+            '<body>' +
+            '<!-- TailorX: Ignore during parsing START -->' +
+            '<div id="ingored-first-slot">' +
+            '<slot name="ingored-first-slot"></slot>' +
+            '</div>' +
+            '<!-- TailorX: Ignore during parsing END -->' +
+            '<div id="navbar">' +
+            '<slot name="navbar"></slot>' +
+            '</div>' +
+            '<div id="body">' +
+            '<slot name="body"></slot>' +
+            '</div>' +
+            '<!-- TailorX: Ignore during parsing START -->' +
+            '<div id="ingored-second-slot">' +
+            '<slot name="ingored-second-slot"></slot>' +
+            '</div>' +
+            '<!-- TailorX: Ignore during parsing END -->' +
+            '<div id="live-chat">' +
+            '<slot name="live-chat"></slot>' +
+            '</div>' +
+            '<div id="footer">' +
+            '<slot name="footer"></slot>' +
+            '</div>' +
+            '</body>' +
+            '</html>';
+
+        const childTemplate =
+            '<fragment' +
+            'id="@portal/navbar"' +
+            'slot="navbar"' +
+            'src="http://127.0.0.1:3001/api/fragment/navbar"' +
+            'timeout="3000">' +
+            '</fragment>' +
+            '<fragment' +
+            'id="@portal/body"' +
+            'slot="body"' +
+            'src="http://127.0.0.1:3001/api/fragment/body"' +
+            'timeout="3000" primary="true">' +
+            '</fragment>' +
+            '<fragment' +
+            'id="@portal/footer"' +
+            'slot="footer"' +
+            'src="http://127.0.0.1:3001/api/fragment/footer"' +
+            'timeout="3000">' +
+            '</fragment>' +
+            '<fragment' +
+            'id="@portal/live-chat"' +
+            'slot="live-chat"' +
+            'src="http://127.0.0.1:3001/api/fragment/live-chat"' +
+            'timeout="3000">' +
+            '</fragment>';
+
+        const chunks = [
+            '<!DOCTYPE html>',
+            '<html>',
+            Buffer.from(
+                '<head>' +
+                    '<meta charset="utf-8" />' +
+                    '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+                    '</head>'
+            ),
+            Buffer.from('<body>'),
+            '<!-- TailorX: Ignored content during parsing #1 -->' +
+                '<div id="navbar">' +
+                '<slot name="navbar"></slot>' +
+                '</div>',
+            Buffer.from(`{}`),
+            Buffer.from(
+                '<div id="body">' +
+                    '<slot name="body"></slot>' +
+                    '</div>' +
+                    '<!-- TailorX: Ignored content during parsing #3 -->' +
+                    '<div id="live-chat">' +
+                    '<slot name="live-chat"></slot>' +
+                    '</div>'
+            ),
+            '<div id="footer">' +
+                '<slot name="footer"></slot>' +
+                '</div>' +
+                '</body>' +
+                '</html>'
+        ];
+
+        serialize.withArgs().returns(chunks);
+
+        const chunksAfterTransform = transformInstance.applyTransforms(
+            baseTemplate,
+            childTemplate
+        );
+
+        assert.equal(
+            chunksAfterTransform[4],
+            '<div id="ingored-first-slot">' +
+                '<slot name="ingored-first-slot"></slot>' +
+                '</div>' +
+                '<div id="navbar">' +
+                '<slot name="navbar"></slot>' +
+                '</div>'
+        );
+        assert.equal(
+            Buffer.from(chunksAfterTransform[6], 'base64').toString('utf-8'),
+            '<div id="body">' +
+                '<slot name="body"></slot>' +
+                '</div>' +
+                '<div id="ingored-second-slot">' +
+                '<slot name="ingored-second-slot"></slot>' +
+                '</div>' +
+                '<div id="live-chat">' +
+                '<slot name="live-chat"></slot>' +
+                '</div>'
+        );
+        assert.equal(chunksAfterTransform.length, chunks.length);
+    });
+
+    it('should throw an error when transform can not find an ignored part while restoring a template', () => {
+        const baseTemplate =
+            '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="utf-8" />' +
+            '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+            '</head>' +
+            '<body>' +
+            '<!-- TailorX: Ignore during parsing START -->' +
+            '<div id="ingored-first-slot">' +
+            '<slot name="ingored-first-slot"></slot>' +
+            '</div>' +
+            '<!-- TailorX: Ignore during parsing END -->' +
+            '</body>' +
+            '</html>';
+
+        const childTemplate = '';
+
+        const chunks = [
+            '<!DOCTYPE html>',
+            '<html>',
+            Buffer.from(
+                '<head>' +
+                    '<meta charset="utf-8" />' +
+                    '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+                    '</head>'
+            ),
+            Buffer.from('<body>'),
+            '<!-- TailorX: Ignored content during parsing #1 -->' +
+                '<!-- TailorX: Ignored content during parsing #3 -->' +
+                '</body>' +
+                '</html>'
+        ];
+
+        serialize.withArgs().returns(chunks);
+
+        let catchedError;
+
+        try {
+            transformInstance.applyTransforms(baseTemplate, childTemplate);
+        } catch (error) {
+            catchedError = error;
+        }
+
+        assert.equal(
+            catchedError.message,
+            'TailorX can not find an ignored part 3 of the current template during restoring!'
+        );
     });
 });
