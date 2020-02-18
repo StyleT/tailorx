@@ -29,9 +29,7 @@ describe('Transform', () => {
         transformInstance = new Transform(handleTags, maxTemplates);
     });
 
-    afterEach(() => {
-        mockSerializer.resetHistory();
-    });
+    afterEach(() => mockSerializer.resetHistory());
 
     it('should make child Templates optional', () => {
         const childTemplate = '';
