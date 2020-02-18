@@ -160,22 +160,24 @@ describe('Transform', () => {
                 '<head>' +
                     '<meta charset="utf-8" />' +
                     '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
-                    '</head>'
+                    '</head>',
+                'utf-8'
             ),
-            Buffer.from('<body>'),
-            '<!-- TailorX: Ignored content during parsing #1 -->' +
+            Buffer.from('<body>', 'utf-8'),
+            '<!-- TailorX: Ignored content during parsing #0 -->' +
                 '<div id="navbar">' +
                 '<slot name="navbar"></slot>' +
                 '</div>',
-            Buffer.from(`{}`),
+            Buffer.from(`{}`, 'utf-8'),
             Buffer.from(
                 '<div id="body">' +
                     '<slot name="body"></slot>' +
                     '</div>' +
-                    '<!-- TailorX: Ignored content during parsing #3 -->' +
+                    '<!-- TailorX: Ignored content during parsing #1 -->' +
                     '<div id="live-chat">' +
                     '<slot name="live-chat"></slot>' +
-                    '</div>'
+                    '</div>',
+                'utf-8'
             ),
             '<div id="footer">' +
                 '<slot name="footer"></slot>' +
@@ -193,21 +195,25 @@ describe('Transform', () => {
 
         assert.equal(
             chunksAfterTransform[4],
-            '<div id="ingored-first-slot">' +
+            '<!-- TailorX: Ignore during parsing START -->' +
+                '<div id="ingored-first-slot">' +
                 '<slot name="ingored-first-slot"></slot>' +
                 '</div>' +
+                '<!-- TailorX: Ignore during parsing END -->' +
                 '<div id="navbar">' +
                 '<slot name="navbar"></slot>' +
                 '</div>'
         );
         assert.equal(
-            Buffer.from(chunksAfterTransform[6], 'base64').toString('utf-8'),
+            chunksAfterTransform[6].toString('utf-8'),
             '<div id="body">' +
                 '<slot name="body"></slot>' +
                 '</div>' +
+                '<!-- TailorX: Ignore during parsing START -->' +
                 '<div id="ingored-second-slot">' +
                 '<slot name="ingored-second-slot"></slot>' +
                 '</div>' +
+                '<!-- TailorX: Ignore during parsing END -->' +
                 '<div id="live-chat">' +
                 '<slot name="live-chat"></slot>' +
                 '</div>'
@@ -241,10 +247,11 @@ describe('Transform', () => {
                 '<head>' +
                     '<meta charset="utf-8" />' +
                     '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
-                    '</head>'
+                    '</head>',
+                'utf-8'
             ),
-            Buffer.from('<body>'),
-            '<!-- TailorX: Ignored content during parsing #1 -->' +
+            Buffer.from('<body>', 'utf-8'),
+            '<!-- TailorX: Ignored content during parsing #0 -->' +
                 '<!-- TailorX: Ignored content during parsing #3 -->' +
                 '</body>' +
                 '</html>'
