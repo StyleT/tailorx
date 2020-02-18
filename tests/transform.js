@@ -20,13 +20,13 @@ describe('Transform', () => {
         return sinon.createStubInstance(MockSerializer);
     });
     const handleTags = ['x-tag'];
-    const maxTemplates = 1;
+    const baseTemplatesCacheSize = 1;
 
     beforeEach(() => {
         Transform = proxyquire('../lib/transform', {
             './serializer': mockSerializer
         });
-        transformInstance = new Transform(handleTags, maxTemplates);
+        transformInstance = new Transform(handleTags, baseTemplatesCacheSize);
     });
 
     afterEach(() => mockSerializer.resetHistory());

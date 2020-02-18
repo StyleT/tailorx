@@ -30,7 +30,7 @@ module.exports = class Tailor extends EventEmitter {
                 ),
                 fragmentTag: 'fragment',
                 handledTags: [],
-                maxTemplates: 0,
+                baseTemplatesCacheSize: 0,
                 handleTag: () => '',
                 requestFragment: requestFragment(filterRequestHeaders),
                 botsGuardEnabled: false,
@@ -47,7 +47,7 @@ module.exports = class Tailor extends EventEmitter {
 
         requestOptions.parseTemplate = parseTemplate(
             [requestOptions.fragmentTag].concat(requestOptions.handledTags),
-            requestOptions.maxTemplates
+            requestOptions.baseTemplatesCacheSize
         );
 
         this.requestHandler = requestHandler.bind(this, requestOptions);
