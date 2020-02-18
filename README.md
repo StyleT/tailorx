@@ -58,7 +58,7 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `templatesPath` - To specify the path where the templates are stored locally, Defaults to `/templates/`
 * `fragmentTag` - Name of the fragment tag, defaults to `fragment`
 * `handledTags` - An array of custom tags, check [`tests/handle-tag`](./tests/handle-tag.js) for more info
-* `maxTemplates` - By default, it equals `20`. You can limit templates cache size which you want to keep, it relates to how many templates you have in your app.
+* `maxTemplates` - By default, it equals `0`. You can limit templates cache size which you want to keep, it relates to how many templates you have in your app.
 * `handleTag(request, tag, options, context)` - Receives a tag or closing tag and serializes it to a string or returns a stream
 * `filterRequestHeaders(attributes, request)` - Function that filters the request headers that are passed to fragment request, check default implementation in [`lib/filter-headers`](./lib/filter-headers.js)
 * `filterResponseHeaders(attributes, headers)` - Function that maps the given response headers from the primary & `return-headers` fragments to the final response

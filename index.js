@@ -30,7 +30,7 @@ module.exports = class Tailor extends EventEmitter {
                 ),
                 fragmentTag: 'fragment',
                 handledTags: [],
-                maxTemplates: 20,
+                maxTemplates: 0,
                 handleTag: () => '',
                 requestFragment: requestFragment(filterRequestHeaders),
                 botsGuardEnabled: false,
