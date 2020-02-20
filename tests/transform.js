@@ -16,17 +16,17 @@ describe('Transform', () => {
         serialize() {}
     }
 
-    let mockSerializer = sinon.spy(function() {
+    const mockSerializer = sinon.spy(function() {
         return sinon.createStubInstance(MockSerializer);
     });
     const handleTags = ['x-tag'];
-    const pipeTags = ['script'];
+    const baseTemplatesCacheSize = 1;
 
     beforeEach(() => {
         Transform = proxyquire('../lib/transform', {
             './serializer': mockSerializer
         });
-        transformInstance = new Transform(handleTags, pipeTags);
+        transformInstance = new Transform(handleTags, baseTemplatesCacheSize);
     });
 
     afterEach(() => mockSerializer.resetHistory());
