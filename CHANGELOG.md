@@ -1,5 +1,9 @@
 # Tailor Changelog
 
+## 5.4.0
+* Add ignoring special content during parsing to speed up performance 
+[#18](https://github.com/StyleT/tailorx/pull/18)
+
 ## 5.3.0
 * Memoization of the CPU expensive template parsing added [#17](https://github.com/StyleT/tailorx/pull/17)
 
