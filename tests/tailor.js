@@ -496,10 +496,27 @@ describe('Tailor', () => {
                 let withFile;
                 beforeEach(done => {
                     const tailor3 = createTailorInstance({
-                        getAssetsToPreload: () => ({
-                            scriptRefs: ['https://loader/a.js', '/b.js'],
-                            styleRefs: ['https://loader/a.css', '/b.css']
-                        })
+                        getAssetsToPreload: request => {
+                            if (
+                                request.url == '/should-return-specific-assets'
+                            ) {
+                                return {
+                                    scriptRefs: [
+                                        'https://loader/specific-script.js',
+                                        '/specific-script.js'
+                                    ],
+                                    styleRefs: [
+                                        'https://loader/specific-style.css',
+                                        '/specific-style.css'
+                                    ]
+                                };
+                            }
+
+                            return {
+                                scriptRefs: ['https://loader/a.js', '/b.js'],
+                                styleRefs: ['https://loader/a.css', '/b.css']
+                            };
+                        }
                     });
                     withFile = http.createServer(tailor3.requestHandler);
                     withFile.listen(8082, 'localhost', done);
@@ -557,6 +574,33 @@ describe('Tailor', () => {
                                     '</b.js>; rel="preload"; as="script"; nopush;,' +
                                     '<http://primary>; rel="preload"; as="style"; nopush;,' +
                                     '<http://primary>; rel="preload"; as="script"; nopush; crossorigin'
+                            );
+                        })
+                        .then(done, done);
+                });
+
+                it('should return assets depend to request', done => {
+                    nock('https://fragment')
+                        .get('/1')
+                        .reply(200, 'non-primary', {
+                            Link:
+                                '<http://non-primary>; rel="stylesheet",<http://non-primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment src="https://fragment/1"></fragment>'
+                    );
+
+                    getResponse(
+                        'http://localhost:8082/should-return-specific-assets'
+                    )
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader/specific-style.css>; rel="preload"; as="style"; nopush;,' +
+                                    '</specific-style.css>; rel="preload"; as="style"; nopush;,' +
+                                    '<https://loader/specific-script.js>; rel="preload"; as="script"; nopush; crossorigin,' +
+                                    '</specific-script.js>; rel="preload"; as="script"; nopush;'
                             );
                         })
                         .then(done, done);
