@@ -1,5 +1,9 @@
 # Tailor Changelog
 
+## 5.5.0
+* Now it's possible to provide links for preload on per-request basis 
+[#19](https://github.com/StyleT/tailorx/pull/19) 
+
 ## 5.4.0
 * Add ignoring special content during parsing to speed up performance 
 [#18](https://github.com/StyleT/tailorx/pull/18)
