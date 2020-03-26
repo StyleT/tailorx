@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 5.6.0
+* `shouldSetPrimaryFragmentAssetsToPreload` option added [#20](https://github.com/StyleT/tailorx/pull/20)
+
 ## 5.5.0
 * Now it's possible to provide links for preload on per-request basis 
 [#19](https://github.com/StyleT/tailorx/pull/19) 
