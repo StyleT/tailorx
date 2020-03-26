@@ -472,35 +472,42 @@ describe('Tailor', () => {
                 });
             });
 
-            it('should not preload primary fragment assets for header Link when options.shouldSetPrimaryFragmentAssetsToPreload is false', done => {
-                const tailor = createTailorInstance({
-                    shouldSetPrimaryFragmentAssetsToPreload: false
-                });
-                const server = http.createServer(tailor.requestHandler);
-                server.listen(8082, 'localhost');
+            describe('when options.shouldSetPrimaryFragmentAssetsToPreload is false', () => {
+                let server;
 
-                nock('https://fragment')
-                    .get('/2')
-                    .reply(200, 'primary', {
-                        Link:
-                            '<http://primary>; rel="stylesheet",<http://primary>; rel="fragment-script"'
+                beforeEach(done => {
+                    const tailor = createTailorInstance({
+                        shouldSetPrimaryFragmentAssetsToPreload: false
                     });
+                    server = http.createServer(tailor.requestHandler);
+                    server.listen(8083, 'localhost', done);
+                });
 
-                mockTemplate.returns(
-                    '<fragment primary src="https://fragment/2"></fragment>'
-                );
+                afterEach(done => {
+                    server.close(done);
+                });
 
-                getResponse('http://localhost:8082/test')
-                    .then(response => {
-                        assert.equal(
-                            response.headers.link,
-                            '<https://loader>; rel="preload"; as="script"; nopush; crossorigin'
-                        );
-                    })
-                    .then(
-                        () => server.close(done),
-                        () => server.close(done)
+                it('should not preload primary fragment assets for header Link', done => {
+                    nock('https://fragment')
+                        .get('/2')
+                        .reply(200, 'primary', {
+                            Link:
+                                '<http://primary>; rel="stylesheet",<http://primary>; rel="fragment-script"'
+                        });
+
+                    mockTemplate.returns(
+                        '<fragment primary src="https://fragment/2"></fragment>'
                     );
+
+                    getResponse('http://localhost:8083/test')
+                        .then(response => {
+                            assert.equal(
+                                response.headers.link,
+                                '<https://loader>; rel="preload"; as="script"; nopush; crossorigin'
+                            );
+                        })
+                        .then(done, done);
+                });
             });
 
             it('should not send crossorigin in Link headers for same origin scripts', done => {

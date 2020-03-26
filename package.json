@@ -9,7 +9,7 @@
     "node-tailor"
   ],
   "scripts": {
-    "test": "mocha --harmony tests/**/*.js",
+    "test": "mocha --harmony tests/**",
     "coverage": "nyc --reporter=lcov --reporter=text mocha --harmony tests/**",
     "codecov": "cat coverage/lcov.info | codecov",
     "lint": "eslint .",
