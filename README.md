@@ -71,7 +71,8 @@ Bot detection is done via [device-detector-js](https://www.npmjs.com/package/dev
     * `insertStart(stream, attributes, headers, index)`
     * `insertEnd(stream, attributes, headers, index)`
 * `getAssetsToPreload()` - If specified, should return array of assets that should be added to the response `Link` header for preload.
-Return value format: `{styleRefs: ['https://ex.com/style.css'], scriptRefs: ['https://ex.com/script.css']}`
+Return value format: `{styleRefs: ['https://ex.com/style.css'], scriptRefs: ['https://ex.com/script.js']}`
+* `shouldSetPrimaryFragmentAssetsToPreload` - `true` by default. This option allows or disallows TailorX to set a primary fragment's assets to the response `Link` header for preload.
 
 ## Template
 

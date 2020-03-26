@@ -38,7 +38,8 @@ module.exports = class Tailor extends EventEmitter {
                 getAssetsToPreload: async () => ({
                     styleRefs: [],
                     scriptRefs: []
-                })
+                }),
+                shouldSetPrimaryFragmentAssetsToPreload: true
             },
             options
         );
