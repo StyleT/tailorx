@@ -57,10 +57,7 @@ describe('requestFragment', () => {
             .reply(500, 'Internal Server Error');
         requestFragment('http://fragment/', fragmentAttrb, { headers: {} })
             .catch(err => {
-                assert.equal(
-                    err.message,
-                    'Internal Server Error! statusCode: 500; statusMessage: null; Url: http://fragment/;'
-                );
+                assert.equal(err.message, 'Internal Server Error');
             })
             .then(done, done);
     });
