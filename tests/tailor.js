@@ -248,7 +248,7 @@ describe('Tailor', () => {
                 .get('/1')
                 .reply(200, 'hello')
                 .get('/2')
-                .reply(300, 'world', { Location: 'https://redirect' })
+                .reply(200, 'world', { Location: 'https://redirect' })
                 .get('/3')
                 .reply(500, '!');
 
@@ -260,7 +260,8 @@ describe('Tailor', () => {
 
             getResponse('http://localhost:8080/test')
                 .then(response => {
-                    assert.equal(response.statusCode, 300);
+                    console.log(response.statusCode);
+                    assert.equal(response.statusCode, 200);
                     assert.equal(response.headers.location, 'https://redirect');
                 })
                 .then(done, done);
