@@ -57,7 +57,43 @@ describe('requestFragment', () => {
             .reply(500, 'Internal Server Error');
         requestFragment('http://fragment/', fragmentAttrb, { headers: {} })
             .catch(err => {
-                assert.equal(err.message, 'Internal Server Error');
+                assert.equal(
+                    err.message,
+                    'Request fragment error. statusCode: 500; statusMessage: null; url: http://fragment/;'
+                );
+            })
+            .then(done, done);
+    });
+
+    it('Should resolve promise for primary fragment with non 2xx response', done => {
+        nock('http://fragment')
+            .get('/')
+            .reply(300, 'Redirect');
+        requestFragment(
+            'http://fragment/',
+            { ...fragmentAttrb, primary: true },
+            { headers: {} }
+        )
+            .then(response => {
+                assert.equal(response.statusCode, 300);
+            })
+            .then(done, done);
+    });
+
+    it('Should reject promise for non primary fragment with non 2xx response', done => {
+        nock('http://fragment')
+            .get('/')
+            .reply(300, 'Redirect');
+        requestFragment(
+            'http://fragment/',
+            { ...fragmentAttrb, primary: false },
+            { headers: {} }
+        )
+            .catch(err => {
+                assert.equal(
+                    err.message,
+                    'Request fragment error. statusCode: 300; statusMessage: null; url: http://fragment/;'
+                );
             })
             .then(done, done);
     });
