@@ -241,7 +241,7 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
-        it.only('should render only primary fragments if response code is neither 2xx nor 5xx', done => {
+        it('should render only primary fragments if response code is neither 2xx nor 5xx', done => {
             nock('https://fragment')
                 .get('/1')
                 .reply(300, 'hello 1')
