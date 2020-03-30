@@ -261,7 +261,6 @@ describe('Tailor', () => {
 
             getResponse('http://localhost:8080/test')
                 .then(response => {
-                    console.log(stripComments(response.body));
                     assert.equal(
                         stripComments(response.body),
                         '<html>' +
