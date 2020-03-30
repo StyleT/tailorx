@@ -1,5 +1,9 @@
 # Tailor Changelog
 
+## 5.7.0
+* Treat non 2xx http status codes from non-primary fragments as error by default
+[#22](https://github.com/StyleT/tailorx/pull/22)
+
 ## 5.6.0
 * `shouldSetPrimaryFragmentAssetsToPreload` option added [#20](https://github.com/StyleT/tailorx/pull/20)
 
