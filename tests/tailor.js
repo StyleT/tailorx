@@ -240,6 +240,39 @@ describe('Tailor', () => {
                 })
                 .then(done, done);
         });
+
+        it('should render only primary fragments if response code is neither 2xx nor 5xx', done => {
+            nock('https://fragment')
+                .get('/1')
+                .reply(300, 'hello 1')
+                .get('/2')
+                .reply(401, 'hello 2')
+                .get('/3')
+                .reply(300, 'hello 3')
+                .get('/4')
+                .reply(401, 'hello 4');
+
+            mockTemplate.returns(
+                '<fragment src="https://fragment/1" primary></fragment>' +
+                    '<fragment src="https://fragment/2" primary></fragment>' +
+                    '<fragment src="https://fragment/3"></fragment>' +
+                    '<fragment src="https://fragment/4"></fragment>'
+            );
+
+            getResponse('http://localhost:8080/test')
+                .then(response => {
+                    assert.equal(
+                        stripComments(response.body),
+                        '<html>' +
+                            '<head></head>' +
+                            '<body>' +
+                            'hello 1hello 2' +
+                            '</body>' +
+                            '</html>'
+                    );
+                })
+                .then(done, done);
+        });
     });
 
     describe('Headers::Tailor', () => {
