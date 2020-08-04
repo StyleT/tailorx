@@ -9,7 +9,8 @@ const stream = require('stream');
 
 const processTemplate = require('../lib/process-template');
 const requestFragment = require('../lib/request-fragment')(
-    require('../lib/filter-headers')
+    require('../lib/filter-headers'),
+    require('../lib/process-fragment-response')
 );
 const AsyncStream = require('../lib/streams/async-stream');
 const parseTemplate = require('../lib/parse-template');

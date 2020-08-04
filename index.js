@@ -7,6 +7,7 @@ const fetchTemplate = require('./lib/fetch-template');
 const parseTemplate = require('./lib/parse-template');
 const requestFragment = require('./lib/request-fragment');
 const filterReqHeadersFn = require('./lib/filter-headers');
+const processFragmentResponseFn = require('./lib/process-fragment-response');
 const { initTracer } = require('./lib/tracing');
 
 module.exports = class Tailor extends EventEmitter {
@@ -14,6 +15,8 @@ module.exports = class Tailor extends EventEmitter {
         super();
         const {
             filterRequestHeaders = options.filterHeaders || filterReqHeadersFn,
+            processFragmentResponse = options.processFragmentResponse ||
+                processFragmentResponseFn,
             maxAssetLinks,
             templatesPath
         } = options;
@@ -32,7 +35,10 @@ module.exports = class Tailor extends EventEmitter {
                 handledTags: [],
                 baseTemplatesCacheSize: 0,
                 handleTag: () => '',
-                requestFragment: requestFragment(filterRequestHeaders),
+                requestFragment: requestFragment(
+                    filterRequestHeaders,
+                    processFragmentResponse
+                ),
                 botsGuardEnabled: false,
                 fragmentHooks: {},
                 getAssetsToPreload: async () => ({

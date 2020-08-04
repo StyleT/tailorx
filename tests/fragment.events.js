@@ -9,12 +9,16 @@ const TAG = { attributes: { src: 'https://fragment' } };
 const REQUEST = { headers: {} };
 const RESPONSE_HEADERS = { connection: 'close' };
 const filterHeaderFn = () => ({});
+const processFragmentResponseFn = require('../lib/process-fragment-response');
 const getOptions = tag => {
     return {
         tag,
         context: {},
         index: false,
-        requestFragment: requestFragment(filterHeaderFn)
+        requestFragment: requestFragment(
+            filterHeaderFn,
+            processFragmentResponseFn
+        )
     };
 };
 
