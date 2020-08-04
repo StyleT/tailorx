@@ -63,7 +63,8 @@ Default implementation [`lib/fetch-template.js`](./lib/fetch-template.js) fetche
 * `filterRequestHeaders(attributes, request)` - Function that filters the request headers that are passed to fragment request, check default implementation in [`lib/filter-headers`](./lib/filter-headers.js)
 * `filterResponseHeaders(attributes, headers)` - Function that maps the given response headers from the primary & `return-headers` fragments to the final response
 * `maxAssetLinks` - Number of `Link` Header directives for CSS and JS respected per fragment - defaults to `1`
-* `requestFragment(filterHeaders)(url, attributes, request)` - Function that returns a promise of request to a fragment server, check the default implementation in [`lib/request-fragment`](./lib/request-fragment.js)
+* `requestFragment(filterHeaders, processFragmentResponse)(url, attributes, request)` - Function that returns a promise of request to a fragment server, check the default implementation in [`lib/request-fragment`](./lib/request-fragment.js)
+* `processFragmentResponse(response, context): response` - Function that processes response from the fragment. Returns response or throws an error. Check the default implementation in [`lib/process-fragment-response`](./lib/process-fragment-response.js)
 * `tracer` - Opentracing [compliant Tracer implementation](https://doc.esdoc.org/github.com/opentracing/opentracing-javascript/class/src/tracer.js~Tracer.html).
 * `botsGuardEnabled` - `false` by default. This option forces TailorX to respond with 500 error code even if non-primary fragment fails in case the request comes from SEO/SM bot.
 Bot detection is done via [device-detector-js](https://www.npmjs.com/package/device-detector-js).
