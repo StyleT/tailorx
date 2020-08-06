@@ -1,5 +1,10 @@
 # Tailor Changelog
 
+## 6.0.0
+* Added `processFragmentResponse(response, context): response` option:
+    * See PR [#23](https://github.com/StyleT/tailorx/pull/23)
+    * (**breaking change**) Modified `requestFragment(filterHeaders, processFragmentResponse)(url, attributes, request)` option
+
 ## 5.7.0
 * Treat non 2xx http status codes from non-primary fragments as error by default
 [#22](https://github.com/StyleT/tailorx/pull/22)
