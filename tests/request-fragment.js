@@ -3,7 +3,11 @@
 const assert = require('assert');
 const nock = require('nock');
 const filterHeaderFn = () => ({});
-const requestFragment = require('../lib/request-fragment')(filterHeaderFn);
+const processFragmentResponseFn = require('../lib/process-fragment-response');
+const requestFragment = require('../lib/request-fragment')(
+    filterHeaderFn,
+    processFragmentResponseFn
+);
 
 describe('requestFragment', () => {
     let fragmentAttrb;
