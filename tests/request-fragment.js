@@ -1,5 +1,7 @@
 'use strict';
 
+const https = require('https');
+const sinon = require('sinon');
 const assert = require('assert');
 const nock = require('nock');
 const filterHeaderFn = () => ({});
@@ -36,21 +38,77 @@ describe('requestFragment', () => {
         });
     });
 
-    it('Should request fragment using https protocol', done => {
-        nock('https://fragment')
-            .get('/')
-            .reply(200, 'HTTPS');
-        requestFragment('https://fragment/', fragmentAttrb, {
+    describe('while using HTTPS protocol', () => {
+        let requestSpy;
+
+        const request = {
             headers: {}
-        }).then(response => {
-            let chunks = [];
-            response.on('data', chunk => {
-                chunks.push(chunk);
+        };
+
+        beforeEach(() => {
+            requestSpy = sinon.spy(https, 'request');
+            nock('https://fragment')
+                .get('/')
+                .reply(200, 'HTTPS');
+        });
+
+        afterEach(() => {
+            requestSpy.restore();
+        });
+
+        it('Should request fragment', done => {
+            const fragmentAttributes = {
+                ...fragmentAttrb,
+                ignoreInvalidSsl: false
+            };
+
+            requestFragment(
+                'https://fragment/',
+                fragmentAttributes,
+                request
+            ).then(response => {
+                let chunks = [];
+                response.on('data', chunk => {
+                    chunks.push(chunk);
+                });
+                response.on('end', () => {
+                    const data = Buffer.concat(chunks).toString('utf8');
+                    assert.equal(data, 'HTTPS');
+                    assert.ok(
+                        requestSpy.neverCalledWithMatch({
+                            rejectUnauthorized: false
+                        })
+                    );
+                    done();
+                });
             });
-            response.on('end', () => {
-                const data = Buffer.concat(chunks).toString('utf8');
-                assert.equal(data, 'HTTPS');
-                done();
+        });
+
+        it('Should ignore invalid SSL certificates while requesting a fragment', done => {
+            const fragmentAttributes = {
+                ...fragmentAttrb,
+                ignoreInvalidSsl: true
+            };
+
+            requestFragment(
+                'https://fragment/',
+                fragmentAttributes,
+                request
+            ).then(response => {
+                let chunks = [];
+                response.on('data', chunk => {
+                    chunks.push(chunk);
+                });
+                response.on('end', () => {
+                    const data = Buffer.concat(chunks).toString('utf8');
+                    assert.equal(data, 'HTTPS');
+                    assert.ok(
+                        requestSpy.calledWithMatch({
+                            rejectUnauthorized: false
+                        })
+                    );
+                    done();
+                });
             });
         });
     });
