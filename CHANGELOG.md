@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 6.1.0
+* Added `ignore-invalid-ssl` fragment atrribute [#24](https://github.com/StyleT/tailorx/pull/24)
+
 ## 6.0.0
 * Added `processFragmentResponse(response, context): response` option:
     * See PR [#23](https://github.com/StyleT/tailorx/pull/23)
@@ -13,11 +16,11 @@
 * `shouldSetPrimaryFragmentAssetsToPreload` option added [#20](https://github.com/StyleT/tailorx/pull/20)
 
 ## 5.5.0
-* Now it's possible to provide links for preload on per-request basis 
-[#19](https://github.com/StyleT/tailorx/pull/19) 
+* Now it's possible to provide links for preload on per-request basis
+[#19](https://github.com/StyleT/tailorx/pull/19)
 
 ## 5.4.0
-* Add ignoring special content during parsing to speed up performance 
+* Add ignoring special content during parsing to speed up performance
 [#18](https://github.com/StyleT/tailorx/pull/18)
 
 ## 5.3.0
