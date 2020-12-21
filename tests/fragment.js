@@ -18,7 +18,8 @@ describe('Fragment', () => {
             src: 'https://fragment',
             async: true,
             timeout: '4000',
-            custom: 'bar'
+            custom: 'bar',
+            'ignore-invalid-ssl': true
         };
 
         const expected = {
@@ -29,7 +30,8 @@ describe('Fragment', () => {
             returnHeaders: false,
             timeout: 4000,
             primary: false,
-            public: false
+            public: false,
+            ignoreInvalidSsl: attributes['ignore-invalid-ssl']
         };
 
         const tag = { attributes };

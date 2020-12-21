@@ -103,6 +103,7 @@ TailorX uses [parse5](https://github.com/inikulin/parse5/) to parse the template
 * `return-headers` - makes TailorX to wait for the fragment response headers & send them in response.
 Note that they will be merged with headers from `primary` fragment & may be overwritten by it.
 * `forward-querystring` - forwards query parameters from the original request down to the fragment
+* `ignore-invalid-ssl` - makes TailorX to ignore invalid SSL certificates while requesting a fragment information from an HTTPS server (default is `false`)
 
 > Other attributes are allowed and will be passed as well to relevant functions (eg. `filterRequestHeaders`, `filterResponseHeaders`, etc.)
 
