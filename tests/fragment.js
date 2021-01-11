@@ -31,7 +31,8 @@ describe('Fragment', () => {
             timeout: 4000,
             primary: false,
             public: false,
-            ignoreInvalidSsl: attributes['ignore-invalid-ssl']
+            ignoreInvalidSsl: attributes['ignore-invalid-ssl'],
+            custom: attributes.custom
         };
 
         const tag = { attributes };
