@@ -1,5 +1,8 @@
 # Tailor Changelog
 
+## 6.1.1
+* [#25](https://github.com/StyleT/tailorx/pull/25) Fixed support for custom attributes, see issue at upstream https://github.com/zalando/tailor/issues/287
+
 ## 6.1.0
 * Added `ignore-invalid-ssl` fragment atrribute [#24](https://github.com/StyleT/tailorx/pull/24)
 
