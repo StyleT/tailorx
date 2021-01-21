@@ -12,8 +12,7 @@ Events may be used for logging and monitoring. Check [perf/benchmark.js](https:/
 * Error: `error(request, error)` in case an error from template (parsing,fetching) and primary error(socket/timeout/50x)
 May be invoked with 2 signatures:
     * `error(request, error)`
-    * `error(request, error, response)` - if you received event with this signature you must write response, TailorX will do nothing on it's side 
-* Context Error: `context:error(request, error)` in case of an error fetching the context
+    * `error(request, error, response)` - if you received event with this signature you must write response, TailorX will do nothing on it's side
 
 ## Fragment events
 
