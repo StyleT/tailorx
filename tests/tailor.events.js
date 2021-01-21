@@ -164,17 +164,25 @@ describe('Tailor events', () => {
         });
     });
 
-    it('emits `context:error(request, error)` event', done => {
-        const onContextError = sinon.spy();
-        const rejectPrm = Promise.reject('Error fetching context');
+    it('emits `error(request, error, response)` event on error in context function', done => {
+        const errMsg = 'Error fetching context';
+        const onContextError = sinon.spy((req, err, res) => {
+            res.statusCode = 500;
+            res.end();
+        });
+        tailor.on('error', onContextError);
+
+        const rejectPrm = Promise.reject(errMsg);
         rejectPrm.catch(() => {});
         mockContext.returns(rejectPrm);
-        tailor.on('context:error', onContextError);
+
+        mockTemplate.returns('<html>');
+
         http.get('http://localhost:8080/template', response => {
             const request = onContextError.args[0][0];
             const error = onContextError.args[0][1];
             assert.equal(request.url, '/template');
-            assert.equal(error, 'Error fetching context');
+            assert.equal(error, errMsg);
             response.resume();
             response.on('end', done);
         });
