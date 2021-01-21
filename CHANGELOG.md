@@ -1,5 +1,13 @@
 # Tailor Changelog
 
+# 7.0.0
+* [#27](https://github.com/StyleT/tailorx/pull/27) CI for Node.js 14
+* [#26](https://github.com/StyleT/tailorx/pull/27) (**breaking change**) simplified error handling of `fetchContext(request)` function
+
+  This ensures that it's impossible to accidentally render page with incorrect context. To preserve old behaviour - wrap your
+  `fetchContext` function with custom error handler which returns `{}`.
+  Done by replacing `context:error(request, error)` event with `error(request, error, response)`.
+
 ## 6.1.1
 * [#25](https://github.com/StyleT/tailorx/pull/25) Fixed support for custom attributes, see issue at upstream https://github.com/zalando/tailor/issues/287
 
