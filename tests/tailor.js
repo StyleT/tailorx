@@ -360,6 +360,53 @@ describe('Tailor', () => {
                 .then(done, done);
         });
 
+        describe('when RequestHandler receives "response" instance with already defined headers', () => {
+            let originalGetHeaders = http.ServerResponse.prototype.getHeaders;
+
+            afterEach(() => {
+                http.ServerResponse.prototype.getHeaders = originalGetHeaders;
+            });
+
+            it('should return headers original response & from primary fragment & "return-headers" fragments', done => {
+                http.ServerResponse.prototype.getHeaders = () => ({
+                    'set-cookie': 'bbb=ccc'
+                });
+
+                const cookiePrimary = 'zalando.guid=6cc4da81; path=/; httponly';
+                const cookie = ['aaa=bbb'];
+                const cookieExpected = [
+                    'zalando.guid=6cc4da81; path=/; httponly',
+                    'aaa=bbb',
+                    'bbb=ccc'
+                ];
+
+                nock('https://fragment')
+                    .get('/1')
+                    .delay(20)
+                    .reply(200, 'hello', { 'Set-Cookie': cookie })
+                    .get('/2')
+                    .reply(200, 'world', { 'Set-Cookie': cookiePrimary })
+                    .get('/3')
+                    .reply(201);
+
+                mockTemplate.returns(
+                    '<fragment return-headers src="https://fragment/1"></fragment>' +
+                        '<fragment src="https://fragment/2" primary></fragment>' +
+                        '<fragment src="https://fragment/3"></fragment>'
+                );
+
+                getResponse('http://localhost:8080/test')
+                    .then(res => {
+                        assert.equal(res.statusCode, 200);
+                        assert.deepEqual(
+                            res.headers['set-cookie'],
+                            cookieExpected
+                        );
+                    })
+                    .then(done, done);
+            });
+        });
+
         it('should return headers from "return-headers" fragments', done => {
             const cookie = [
                 'zalando.guid=6cc4da81; path=/; httponly',
