@@ -110,7 +110,7 @@ Note that they will be merged with headers from `primary` fragment & may be over
 ### Fragment server
 
 A fragment is an http(s) server that renders only the part of the page and sets `Link`, `x-head-title`, `x-head-meta`
-headers (valid only for primary fragment) to provide urls to CSS and JavaScript resources.
+headers (valid only for primary fragment) to provide urls to [CSS](https://www.scaler.com/topics/css/) and JavaScript resources.
 
 Primary fragment possible response headers:
 * `Link` - Check [reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link).
